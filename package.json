@@ -1,0 +1,22 @@
+{
+  "name": "chat-core",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "packageManager": "yarn@4.14.1",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "prettier": "^3.8.3",
+    "prettier-plugin-organize-imports": "^4.3.0"
+  },
+  "scripts": {
+    "format": "prettier --write 'client/**/*.{js,ts,jsx,tsx,css}' 'server/**/*.{js,ts}'",
+    "client": "yarn workspace client dev",
+    "server": "yarn workspace server dev",
+    "app": "concurrently \"yarn workspace client dev\" \"yarn workspace server dev\"",
+    "dev": "concurrently -n \"CLIENT,SERVER\" -c \"blue,green\" \"yarn workspace client dev\" \"yarn workspace server dev\""
+  }
+}
