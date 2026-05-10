@@ -1,0 +1,15 @@
+model Participant {
+  id     String @id @default(cuid())
+  userId String
+  chatId String
+  role   Role   @default(MEMBER)
+
+  user   User   @relation(fields: [userId], references: [id])
+  chat   Chat   @relation(fields: [chatId], references: [id])
+}
+
+enum Role {
+  OWNER
+  MEMBER
+  ADMIN
+}
