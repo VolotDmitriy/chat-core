@@ -4,8 +4,10 @@ model Participant {
   chatId String
   role   Role   @default(MEMBER)
 
-  user   User   @relation(fields: [userId], references: [id])
-  chat   Chat   @relation(fields: [chatId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  chat Chat @relation(fields: [chatId], references: [id])
+
+  @@unique([userId, chatId])
 }
 
 enum Role {

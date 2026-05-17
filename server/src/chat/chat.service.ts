@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+    ConflictException,
+    ForbiddenException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
 import { Role } from '../../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddMemberDto } from './dto/add-member.dto';
@@ -48,6 +53,27 @@ export class ChatService {
     }
 
     async addMember(chatId: string, userId: string, dto: AddMemberDto) {
+        const checkUser = await this.prisma.user.findUnique({
+            where: {
+                id: dto.userId,
+            },
+        });
+        if (!checkUser) {
+            throw new NotFoundException('User not found');
+        }
+
+        const existingParticipant = await this.prisma.participant.findUnique({
+            where: {
+                userId_chatId: {
+                    chatId,
+                    userId: dto.userId,
+                },
+            },
+        });
+        if (existingParticipant) {
+            throw new ConflictException('User is already a participant');
+        }
+
         const isParticipant = await this.prisma.chat.findFirst({
             where: {
                 id: chatId,

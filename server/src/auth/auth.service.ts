@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+    ConflictException,
+    Injectable,
+    UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'node:crypto';
@@ -42,7 +46,7 @@ export class AuthService {
             },
         });
         if (!user) {
-            throw new ConflictException('Invalid credentials');
+            throw new UnauthorizedException('Invalid credentials');
         }
 
         const isPasswordValid = await bcrypt.compare(
@@ -50,7 +54,7 @@ export class AuthService {
             user.passwordHash,
         );
         if (!isPasswordValid) {
-            throw new ConflictException('Invalid credentials');
+            throw new UnauthorizedException('Invalid credentials');
         }
 
         const accessToken = this.jwtService.sign({
@@ -78,7 +82,7 @@ export class AuthService {
             },
         });
         if (!tokenRecord) {
-            throw new ConflictException('Invalid refresh token');
+            throw new UnauthorizedException('Invalid refresh token');
         }
 
         if (tokenRecord.expiresAt < new Date()) {
@@ -87,7 +91,7 @@ export class AuthService {
                     id: tokenRecord.id,
                 },
             });
-            throw new ConflictException('Invalid refresh token');
+            throw new UnauthorizedException('Invalid refresh token');
         }
 
         const user = await this.prisma.user.findUnique({
@@ -97,7 +101,7 @@ export class AuthService {
         });
 
         if (!user) {
-            throw new ConflictException('Invalid refresh token');
+            throw new UnauthorizedException('Invalid refresh token');
         }
 
         const accessToken = this.jwtService.sign({

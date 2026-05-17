@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class UserService {
     constructor(private readonly prisma: PrismaService) {}
 
-    getMe(userId: string) {
-        return this.prisma.user.findUnique({
+    async getMe(userId: string) {
+        const user = await this.prisma.user.findUnique({
             where: {
                 id: userId,
             },
@@ -17,5 +17,9 @@ export class UserService {
                 createdAt: true,
             },
         });
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+        return user;
     }
 }
