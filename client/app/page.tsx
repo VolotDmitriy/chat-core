@@ -23,7 +23,7 @@ export default function Home() {
                     onSelectChannel={setSelectedChannel}
                 />
 
-                <ChatArea channelName={chatName} />
+                <ChatArea channelName={chatName} chatId={selectedChannel} />
 
                 <MembersPanel />
             </div>

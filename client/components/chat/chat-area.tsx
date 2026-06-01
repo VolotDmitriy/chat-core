@@ -1,29 +1,42 @@
 'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { type Message, messages, users } from '@/lib/mock-data';
+import { useMessages } from '@/hooks/use-messages';
+import { type Message } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Hash, Paperclip, Pin, Send, Smile, Users } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { EmojiPicker } from './emoji-picker';
 
 interface ChatAreaProps {
     channelName: string;
+    chatId: string | null;
 }
 
-export function ChatArea({ channelName }: ChatAreaProps) {
+export function ChatArea({ channelName, chatId }: ChatAreaProps) {
     const [inputValue, setInputValue] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const { messages, sendMessage } = useMessages(chatId);
+    const currentUserId = useMemo(() => {
+        if (typeof window === 'undefined') return null;
+        try {
+            return (
+                JSON.parse(localStorage.getItem('user') ?? 'null')?.id ?? null
+            );
+        } catch {
+            return null;
+        }
+    }, []);
 
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, []);
+    }, [messages]);
 
     const handleEmojiSelect = (emoji: string) => {
         setInputValue((prev) => prev + emoji);
@@ -31,6 +44,11 @@ export function ChatArea({ channelName }: ChatAreaProps) {
         textareaRef.current?.focus();
     };
 
+    const handleSend = async () => {
+        if (!inputValue.trim()) return;
+        await sendMessage(inputValue);
+        setInputValue('');
+    };
     return (
         <div className="bg-background flex min-w-0 flex-1 flex-col">
             {/* Chat Header */}
@@ -50,6 +68,7 @@ export function ChatArea({ channelName }: ChatAreaProps) {
                         variant="ghost"
                         size="icon"
                         className="text-muted-foreground hover:text-foreground h-8 w-8"
+                        aria-label="Pin channel"
                     >
                         <Pin className="h-4 w-4" />
                     </Button>
@@ -57,6 +76,7 @@ export function ChatArea({ channelName }: ChatAreaProps) {
                         variant="ghost"
                         size="icon"
                         className="text-muted-foreground hover:text-foreground h-8 w-8"
+                        aria-label="Add users"
                     >
                         <Users className="h-4 w-4" />
                     </Button>
@@ -67,31 +87,35 @@ export function ChatArea({ channelName }: ChatAreaProps) {
             <div className="flex-1 overflow-y-auto p-4" ref={scrollRef}>
                 <div className="space-y-4">
                     {messages.map((message) => (
-                        <MessageBubble key={message.id} message={message} />
+                        <MessageBubble
+                            key={message.id}
+                            message={message}
+                            currentId={currentUserId}
+                        />
                     ))}
 
                     {/* Typing Indicator */}
-                    <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage
-                                src={users[0].avatar}
-                                alt={users[0].name}
-                            />
-                            <AvatarFallback className="bg-muted text-xs">
-                                SC
-                            </AvatarFallback>
-                        </Avatar>
-                        <div className="bg-card rounded-2xl rounded-bl-sm px-4 py-2">
-                            <div className="flex items-center gap-1">
-                                <span className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:-0.3s]" />
-                                <span className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:-0.15s]" />
-                                <span className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full" />
-                            </div>
-                        </div>
-                        <span className="text-muted-foreground text-xs">
-                            Sarah is typing...
-                        </span>
-                    </div>
+                    {/*        <div className="flex items-center gap-2">*/}
+                    {/*            <Avatar className="h-8 w-8">*/}
+                    {/*                <AvatarImage*/}
+                    {/*                    src={users[0].avatar}*/}
+                    {/*                    alt={users[0].name}*/}
+                    {/*                />*/}
+                    {/*                <AvatarFallback className="bg-muted text-xs">*/}
+                    {/*                    SC*/}
+                    {/*                </AvatarFallback>*/}
+                    {/*            </Avatar>*/}
+                    {/*            <div className="bg-card rounded-2xl rounded-bl-sm px-4 py-2">*/}
+                    {/*                <div className="flex items-center gap-1">*/}
+                    {/*                    <span className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:-0.3s]" />*/}
+                    {/*                    <span className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:-0.15s]" />*/}
+                    {/*                    <span className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full" />*/}
+                    {/*                </div>*/}
+                    {/*            </div>*/}
+                    {/*            <span className="text-muted-foreground text-xs">*/}
+                    {/*                Sarah is typing...*/}
+                    {/*            </span>*/}
+                    {/*        </div>*/}
                 </div>
             </div>
 
@@ -102,6 +126,7 @@ export function ChatArea({ channelName }: ChatAreaProps) {
                         variant="ghost"
                         size="icon"
                         className="text-muted-foreground hover:text-foreground h-8 w-8 shrink-0"
+                        aria-label="Add attachment"
                     >
                         <Paperclip className="h-4 w-4" />
                     </Button>
@@ -112,6 +137,7 @@ export function ChatArea({ channelName }: ChatAreaProps) {
                         placeholder={`Message #${channelName}`}
                         className="max-h-32 min-h-8 resize-none border-0 bg-transparent p-3 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
                         rows={1}
+                        aria-label="Message input"
                     />
                     <div className="relative">
                         <Button
@@ -119,6 +145,7 @@ export function ChatArea({ channelName }: ChatAreaProps) {
                             size="icon"
                             className="text-muted-foreground hover:text-foreground h-8 w-8 shrink-0"
                             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                            aria-label="Add emoji"
                         >
                             <Smile className="h-4 w-4" />
                         </Button>
@@ -133,6 +160,8 @@ export function ChatArea({ channelName }: ChatAreaProps) {
                         size="icon"
                         className="h-8 w-8 shrink-0 bg-[#3b82f6] text-white hover:bg-[#2563eb]"
                         disabled={!inputValue.trim()}
+                        aria-label="Send message"
+                        onClick={handleSend}
                     >
                         <Send className="h-4 w-4" />
                     </Button>
@@ -142,22 +171,32 @@ export function ChatArea({ channelName }: ChatAreaProps) {
     );
 }
 
-function MessageBubble({ message }: { message: Message }) {
+function MessageBubble({
+    message,
+    currentId,
+}: {
+    message: Message;
+    currentId: string | null;
+}) {
+    const isOwn = message.user.id === currentId;
+    const username = message.user.username;
+    const timestamp = new Date(message.createdAt).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+
     return (
         <div
             className={cn(
                 'flex items-start gap-2',
-                message.isOwn && 'flex-row-reverse',
+                isOwn && 'flex-row-reverse',
             )}
         >
-            {!message.isOwn && (
+            {!isOwn && (
                 <Avatar className="h-8 w-8 shrink-0">
-                    <AvatarImage
-                        src={message.user.avatar}
-                        alt={message.user.name}
-                    />
+                    {/*<AvatarImage src={message.user.avatar} alt={username} />*/}
                     <AvatarFallback className="bg-muted text-xs">
-                        {message.user.name
+                        {username
                             .split(' ')
                             .map((n) => n[0])
                             .join('')}
@@ -167,32 +206,32 @@ function MessageBubble({ message }: { message: Message }) {
             <div
                 className={cn(
                     'flex max-w-[70%] flex-col',
-                    message.isOwn && 'items-end',
+                    isOwn && 'items-end',
                 )}
             >
-                {!message.isOwn && (
+                {!isOwn && (
                     <div className="mb-1 flex items-center gap-2">
                         <span className="text-foreground text-sm font-medium">
-                            {message.user.name}
+                            {username}
                         </span>
                         <span className="text-muted-foreground text-xs">
-                            {message.timestamp}
+                            {timestamp}
                         </span>
                     </div>
                 )}
                 <div
                     className={cn(
                         'rounded-2xl px-4 py-2 text-sm',
-                        message.isOwn
+                        isOwn
                             ? 'rounded-br-sm bg-linear-to-r from-[#3b82f6] to-[#1d4ed8] text-white'
                             : 'bg-card text-foreground rounded-bl-sm',
                     )}
                 >
                     {message.content}
                 </div>
-                {message.isOwn && (
+                {isOwn && (
                     <span className="text-muted-foreground mt-1 text-xs">
-                        {message.timestamp}
+                        {timestamp}
                     </span>
                 )}
             </div>
