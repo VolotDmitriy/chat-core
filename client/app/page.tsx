@@ -1,10 +1,31 @@
+'use client';
+
+import { ChatArea } from '@/components/chat/chat-area';
+import { MembersPanel } from '@/components/chat/members-panel';
+import { Sidebar } from '@/components/chat/sidebar';
+import { Topbar } from '@/components/chat/topbar';
+import { useChats } from '@/hooks/use-chats';
+import { useState } from 'react';
+
 export default function Home() {
+    const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
+    const { chats } = useChats();
+    const currentChat = chats.find((chat) => chat.id === selectedChannel);
+
+    const chatName = currentChat?.name ?? 'Select a channel';
     return (
-        <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-900">
-            <div className="flex items-center justify-center w-64 h-24 rounded-lg bg-white dark:bg-zinc-800 shadow-md border border-zinc-200 dark:border-zinc-700">
-                <span className="text-2xl font-semibold text-zinc-800 dark:text-zinc-100 tracking-wide">
-                    Chat
-                </span>
+        <div className="bg-background flex h-screen flex-col">
+            <Topbar channelName={chatName} />
+
+            <div className="flex flex-1 overflow-hidden">
+                <Sidebar
+                    selectedChannel={selectedChannel}
+                    onSelectChannel={setSelectedChannel}
+                />
+
+                <ChatArea channelName={chatName} />
+
+                <MembersPanel />
             </div>
         </div>
     );
