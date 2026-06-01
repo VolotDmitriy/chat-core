@@ -18,6 +18,23 @@ export class AuthService {
         private readonly jwtService: JwtService,
     ) {}
 
+    private async generateTokens(user: { id: string; email: string }) {
+        const accessToken = this.jwtService.sign({
+            sub: user.id,
+            email: user.email,
+        });
+        const refreshToken = randomUUID();
+
+        await this.prisma.refreshToken.create({
+            data: {
+                userId: user.id,
+                token: refreshToken,
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            },
+        });
+        return { accessToken, refreshToken };
+    }
+
     async register(registerDto: RegisterDto) {
         const existingUser = await this.prisma.user.findUnique({
             where: {
@@ -36,7 +53,13 @@ export class AuthService {
                 passwordHash: hashedPassword,
             },
         });
-        return { id: user.id, email: user.email, username: user.username };
+
+        const tokens = await this.generateTokens(user);
+
+        return {
+            ...tokens,
+            user: { id: user.id, email: user.email, username: user.username },
+        };
     }
 
     async login(loginDto: LoginDto) {
@@ -57,22 +80,12 @@ export class AuthService {
             throw new UnauthorizedException('Invalid credentials');
         }
 
-        const accessToken = this.jwtService.sign({
-            sub: user.id,
-            email: user.email,
-        });
+        const tokens = await this.generateTokens(user);
 
-        const refreshToken = randomUUID();
-
-        await this.prisma.refreshToken.create({
-            data: {
-                userId: user.id,
-                token: refreshToken,
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            },
-        });
-
-        return { accessToken, refreshToken };
+        return {
+            ...tokens,
+            user: { id: user.id, email: user.email, username: user.username },
+        };
     }
 
     async refresh(refreshDto: RefreshDto) {
