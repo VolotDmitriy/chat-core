@@ -1,14 +1,35 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { currentUser } from '@/lib/mock-data';
+
+import { User } from '@/lib/types';
 import { MessageSquare, Wifi } from 'lucide-react';
+import { useState } from 'react';
 
 interface TopbarProps {
     channelName: string;
 }
 
 export function Topbar({ channelName }: TopbarProps) {
+    const [user, setUser] = useState<User | null>(() => {
+        if (typeof window === 'undefined') {
+            return null;
+        }
+
+        try {
+            const rawUser = localStorage.getItem('user');
+
+            if (!rawUser) {
+                return null;
+            }
+
+            return JSON.parse(rawUser) as User;
+        } catch {
+            localStorage.removeItem('user');
+            return null;
+        }
+    });
+
     return (
         <header className="border-border bg-card flex h-14 shrink-0 items-center justify-between border-b px-4">
             {/* Logo */}
@@ -36,15 +57,9 @@ export function Topbar({ channelName }: TopbarProps) {
                     <span className="text-emerald-500">Connected</span>
                 </div>
                 <Avatar className="h-8 w-8 ring-2 ring-[#3b82f6]/50">
-                    <AvatarImage
-                        src={currentUser.avatar}
-                        alt={currentUser.name}
-                    />
+                    <AvatarImage src={'/image'} alt={user?.username} />
                     <AvatarFallback className="bg-[#3b82f6] text-xs text-white">
-                        {currentUser.name
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')}
+                        {user?.username?.[0]?.toUpperCase()}
                     </AvatarFallback>
                 </Avatar>
             </div>
