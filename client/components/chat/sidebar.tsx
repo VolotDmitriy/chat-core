@@ -8,6 +8,7 @@ import { useChats } from '@/hooks/use-chats';
 import type { Chat } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ChevronDown, Hash, Search } from 'lucide-react';
+import { useState } from 'react';
 
 interface SidebarProps {
     selectedChannel: string | null;
@@ -18,6 +19,8 @@ export function Sidebar({ selectedChannel, onSelectChannel }: SidebarProps) {
     const { chats, loading } = useChats();
     const groupChats = chats.filter((chat) => chat.isGroup);
     const directChats = chats.filter((chat) => !chat.isGroup);
+    const [showChannels, setShowChannels] = useState(true);
+    const [showDMs, setShowDMs] = useState(true);
 
     return (
         <aside className="bg-sidebar border-sidebar-border flex w-64 shrink-0 flex-col border-r">
@@ -35,11 +38,14 @@ export function Sidebar({ selectedChannel, onSelectChannel }: SidebarProps) {
             <ScrollArea className="flex-1">
                 {/* Channels Section */}
                 <div className="px-3 py-2">
-                    <button className="text-muted-foreground hover:text-foreground mb-2 flex items-center gap-1 text-xs font-semibold tracking-wider uppercase transition-colors">
-                        <ChevronDown className="h-3 w-3" />
+                    <button
+                        onClick={() => setShowChannels((prev) => !prev)}
+                        className="text-muted-foreground hover:text-foreground mb-2 flex items-center gap-1 text-xs font-semibold tracking-wider uppercase transition-colors"
+                    >
+                        <ChevronDown className={cn('h-3 w-3 transition-transform', !showChannels && '-rotate-90')} />
                         Channels
                     </button>
-                    <div className="space-y-0.5">
+                    {showChannels && <div className="space-y-0.5">
                         {loading ? (
                             <SpinnerEmpty />
                         ) : (
@@ -52,16 +58,19 @@ export function Sidebar({ selectedChannel, onSelectChannel }: SidebarProps) {
                                 />
                             ))
                         )}
-                    </div>
+                    </div>}
                 </div>
 
                 {/* Direct Messages Section */}
                 <div className="px-3 py-2">
-                    <button className="text-muted-foreground hover:text-foreground mb-2 flex items-center gap-1 text-xs font-semibold tracking-wider uppercase transition-colors">
-                        <ChevronDown className="h-3 w-3" />
+                    <button
+                        onClick={() => setShowDMs((prev) => !prev)}
+                        className="text-muted-foreground hover:text-foreground mb-2 flex items-center gap-1 text-xs font-semibold tracking-wider uppercase transition-colors"
+                    >
+                        <ChevronDown className={cn('h-3 w-3 transition-transform', !showDMs && '-rotate-90')} />
                         Direct Messages
                     </button>
-                    <div className="space-y-0.5">
+                    {showDMs && <div className="space-y-0.5">
                         {loading ? (
                             <SpinnerEmpty />
                         ) : (
@@ -74,7 +83,7 @@ export function Sidebar({ selectedChannel, onSelectChannel }: SidebarProps) {
                                 />
                             ))
                         )}
-                    </div>
+                    </div>}
                 </div>
             </ScrollArea>
         </aside>
