@@ -17,5 +17,5 @@ export interface Message {
     id: string;
     content: string;
     createdAt: Date;
-    user: User;
+    sender: User;
 }

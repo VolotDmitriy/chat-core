@@ -31,6 +31,7 @@ export function ChatArea({ channelName, chatId }: ChatAreaProps) {
             return null;
         }
     }, []);
+    const [isSending, setIsSending] = useState(false);
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -45,9 +46,14 @@ export function ChatArea({ channelName, chatId }: ChatAreaProps) {
     };
 
     const handleSend = async () => {
-        if (!inputValue.trim()) return;
-        await sendMessage(inputValue);
-        setInputValue('');
+        if (!inputValue.trim() || isSending) return;
+        setIsSending(true);
+        try {
+            await sendMessage(inputValue);
+            setInputValue('');
+        } finally {
+            setIsSending(false);
+        }
     };
     return (
         <div className="bg-background flex min-w-0 flex-1 flex-col">
@@ -178,8 +184,8 @@ function MessageBubble({
     message: Message;
     currentId: string | null;
 }) {
-    const isOwn = message.user.id === currentId;
-    const username = message.user.username;
+    const isOwn = message.sender.id === currentId;
+    const username = message.sender.username;
     const timestamp = new Date(message.createdAt).toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
@@ -194,7 +200,7 @@ function MessageBubble({
         >
             {!isOwn && (
                 <Avatar className="h-8 w-8 shrink-0">
-                    {/*<AvatarImage src={message.user.avatar} alt={username} />*/}
+                    {/*<AvatarImage src={message.sender.avatar} alt={username} />*/}
                     <AvatarFallback className="bg-muted text-xs">
                         {username
                             .split(' ')

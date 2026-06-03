@@ -30,6 +30,11 @@ export class MessageService {
                 senderId: userId,
                 content: dto.content,
             },
+            include: {
+                sender: {
+                    select: { id: true, email: true, username: true },
+                },
+            },
         });
 
         return newMessage;
