@@ -126,6 +126,27 @@
     body {
         @apply bg-background text-foreground;
     }
+    * {
+        scrollbar-width: none;
+    }
+    *::-webkit-scrollbar {
+        display: none;
+    }
+    *:hover {
+        scrollbar-width: thin;
+        scrollbar-color: var(--secondary) transparent;
+    }
+    *:hover::-webkit-scrollbar {
+        display: block;
+        width: 10px;
+    }
+    *:hover::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    *:hover::-webkit-scrollbar-thumb {
+        background: var(--secondary);
+        border-radius: 9999px;
+    }
     html {
         @apply font-sans;
     }
