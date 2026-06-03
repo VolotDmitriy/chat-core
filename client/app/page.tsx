@@ -5,14 +5,22 @@ import { MembersPanel } from '@/components/chat/members-panel';
 import { Sidebar } from '@/components/chat/sidebar';
 import { Topbar } from '@/components/chat/topbar';
 import { useChats } from '@/hooks/use-chats';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function Home() {
-    const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const selectedChannel = searchParams.get('chat');
+
     const { chats } = useChats();
     const currentChat = chats.find((chat) => chat.id === selectedChannel);
 
     const chatName = currentChat?.name ?? 'Select a channel';
+
+    const handleSelectChannel = (id: string) => {
+        router.push(`/?chat=${id}`);
+    };
+
     return (
         <div className="bg-background flex h-screen flex-col">
             <Topbar channelName={chatName} />
@@ -20,7 +28,7 @@ export default function Home() {
             <div className="flex flex-1 overflow-hidden">
                 <Sidebar
                     selectedChannel={selectedChannel}
-                    onSelectChannel={setSelectedChannel}
+                    onSelectChannel={handleSelectChannel}
                 />
 
                 <ChatArea channelName={chatName} chatId={selectedChannel} />
