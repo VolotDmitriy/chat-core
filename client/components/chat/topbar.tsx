@@ -4,31 +4,25 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import { User } from '@/lib/types';
 import { MessageSquare, Wifi } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface TopbarProps {
     channelName: string;
 }
 
 export function Topbar({ channelName }: TopbarProps) {
-    const [user, setUser] = useState<User | null>(() => {
-        if (typeof window === 'undefined') {
-            return null;
-        }
+    const [user, setUser] = useState<User | null>(null);
 
+    useEffect(() => {
+        const stored = localStorage.getItem('user');
+        if (!stored) return;
         try {
-            const rawUser = localStorage.getItem('user');
-
-            if (!rawUser) {
-                return null;
-            }
-
-            return JSON.parse(rawUser) as User;
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setUser(JSON.parse(stored));
         } catch {
             localStorage.removeItem('user');
-            return null;
         }
-    });
+    }, []);
 
     return (
         <header className="border-border bg-card flex h-14 shrink-0 items-center justify-between border-b px-4">
