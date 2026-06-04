@@ -12,7 +12,7 @@ export default function Home() {
     const searchParams = useSearchParams();
     const selectedChannel = searchParams.get('chat');
 
-    const { chats } = useChats();
+    const { chats, loading } = useChats();
     const currentChat = chats.find((chat) => chat.id === selectedChannel);
 
     const chatName = currentChat?.name ?? 'Select a channel';
@@ -29,11 +29,15 @@ export default function Home() {
                 <Sidebar
                     selectedChannel={selectedChannel}
                     onSelectChannel={handleSelectChannel}
+                    chats={chats}
+                    loading={loading}
                 />
 
                 <ChatArea channelName={chatName} chatId={selectedChannel} />
 
-                <MembersPanel />
+                {currentChat && (
+                    <MembersPanel participants={currentChat.participants} />
+                )}
             </div>
         </div>
     );

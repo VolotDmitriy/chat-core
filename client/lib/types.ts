@@ -9,7 +9,7 @@ export interface Chat {
     name: string | null;
     isGroup: boolean;
     createdAt: Date;
-    members: { user: User }[];
+    participants: { user: User }[];
     messages: Message[];
 }
 

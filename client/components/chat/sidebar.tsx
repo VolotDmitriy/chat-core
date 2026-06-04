@@ -4,19 +4,24 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { SpinnerEmpty } from '@/components/ui/loading';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useChats } from '@/hooks/use-chats';
 import type { Chat } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ChevronDown, Hash, Search } from 'lucide-react';
 import { useState } from 'react';
 
 interface SidebarProps {
+    chats: Chat[];
+    loading: boolean;
     selectedChannel: string | null;
     onSelectChannel: (id: string) => void;
 }
 
-export function Sidebar({ selectedChannel, onSelectChannel }: SidebarProps) {
-    const { chats, loading } = useChats();
+export function Sidebar({
+    chats,
+    loading,
+    selectedChannel,
+    onSelectChannel,
+}: SidebarProps) {
     const groupChats = chats.filter((chat) => chat.isGroup);
     const directChats = chats.filter((chat) => !chat.isGroup);
     const [showChannels, setShowChannels] = useState(true);
@@ -30,6 +35,7 @@ export function Sidebar({ selectedChannel, onSelectChannel }: SidebarProps) {
                     <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                     <Input
                         placeholder="Search..."
+                        aria-label="Search"
                         className="bg-sidebar-accent border-sidebar-border h-9 pl-9 text-sm"
                     />
                 </div>
@@ -42,23 +48,32 @@ export function Sidebar({ selectedChannel, onSelectChannel }: SidebarProps) {
                         onClick={() => setShowChannels((prev) => !prev)}
                         className="text-muted-foreground hover:text-foreground mb-2 flex items-center gap-1 text-xs font-semibold tracking-wider uppercase transition-colors"
                     >
-                        <ChevronDown className={cn('h-3 w-3 transition-transform', !showChannels && '-rotate-90')} />
+                        <ChevronDown
+                            className={cn(
+                                'h-3 w-3 transition-transform',
+                                !showChannels && '-rotate-90',
+                            )}
+                        />
                         Channels
                     </button>
-                    {showChannels && <div className="space-y-0.5">
-                        {loading ? (
-                            <SpinnerEmpty />
-                        ) : (
-                            groupChats.map((chat) => (
-                                <ChannelItem
-                                    key={chat.id}
-                                    chat={chat}
-                                    isSelected={selectedChannel === chat.id}
-                                    onSelect={() => onSelectChannel(chat.id)}
-                                />
-                            ))
-                        )}
-                    </div>}
+                    {showChannels && (
+                        <div className="space-y-0.5">
+                            {loading ? (
+                                <SpinnerEmpty />
+                            ) : (
+                                groupChats.map((chat) => (
+                                    <ChannelItem
+                                        key={chat.id}
+                                        chat={chat}
+                                        isSelected={selectedChannel === chat.id}
+                                        onSelect={() =>
+                                            onSelectChannel(chat.id)
+                                        }
+                                    />
+                                ))
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Direct Messages Section */}
@@ -67,23 +82,32 @@ export function Sidebar({ selectedChannel, onSelectChannel }: SidebarProps) {
                         onClick={() => setShowDMs((prev) => !prev)}
                         className="text-muted-foreground hover:text-foreground mb-2 flex items-center gap-1 text-xs font-semibold tracking-wider uppercase transition-colors"
                     >
-                        <ChevronDown className={cn('h-3 w-3 transition-transform', !showDMs && '-rotate-90')} />
+                        <ChevronDown
+                            className={cn(
+                                'h-3 w-3 transition-transform',
+                                !showDMs && '-rotate-90',
+                            )}
+                        />
                         Direct Messages
                     </button>
-                    {showDMs && <div className="space-y-0.5">
-                        {loading ? (
-                            <SpinnerEmpty />
-                        ) : (
-                            directChats.map((chat) => (
-                                <DirectMessageItem
-                                    key={chat.id}
-                                    chat={chat}
-                                    isSelected={selectedChannel === chat.id}
-                                    onSelect={() => onSelectChannel(chat.id)}
-                                />
-                            ))
-                        )}
-                    </div>}
+                    {showDMs && (
+                        <div className="space-y-0.5">
+                            {loading ? (
+                                <SpinnerEmpty />
+                            ) : (
+                                directChats.map((chat) => (
+                                    <DirectMessageItem
+                                        key={chat.id}
+                                        chat={chat}
+                                        isSelected={selectedChannel === chat.id}
+                                        onSelect={() =>
+                                            onSelectChannel(chat.id)
+                                        }
+                                    />
+                                ))
+                            )}
+                        </div>
+                    )}
                 </div>
             </ScrollArea>
         </aside>
@@ -135,7 +159,7 @@ function DirectMessageItem({
     isSelected: boolean;
     onSelect: () => void;
 }) {
-    const partner = chat.members[0]?.user;
+    const partner = chat.participants[0]?.user;
     const lastMessage = chat.messages.at(-1);
     const initials = partner?.username.slice(0, 2).toUpperCase() ?? '??';
 
