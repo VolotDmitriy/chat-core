@@ -22,4 +22,36 @@ export class UserService {
         }
         return user;
     }
+
+    async searchUser(query: string, currentUserId: string) {
+        const users = await this.prisma.user.findMany({
+            where: {
+                AND: [
+                    { id: { not: currentUserId } },
+                    {
+                        OR: [
+                            {
+                                username: {
+                                    contains: query,
+                                    mode: 'insensitive',
+                                },
+                            },
+                            {
+                                email: {
+                                    contains: query,
+                                    mode: 'insensitive',
+                                },
+                            },
+                        ],
+                    },
+                ],
+            },
+            select: {
+                id: true,
+                email: true,
+                username: true,
+            },
+        });
+        return users;
+    }
 }
