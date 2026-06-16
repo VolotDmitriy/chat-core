@@ -4,16 +4,18 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { SpinnerEmpty } from '@/components/ui/loading';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { Chat } from '@/lib/types';
+import type { Chat, User } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { ChevronDown, Hash, Search } from 'lucide-react';
+import { ChevronDown, Hash, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
+import { CreateChatDialog } from './create-chat-dialog';
 
 interface SidebarProps {
     chats: Chat[];
     loading: boolean;
     selectedChannel: string | null;
     onSelectChannel: (id: string) => void;
+    onSuccess: () => void;
 }
 
 export function Sidebar({
@@ -21,11 +23,18 @@ export function Sidebar({
     loading,
     selectedChannel,
     onSelectChannel,
+    onSuccess,
 }: SidebarProps) {
     const groupChats = chats.filter((chat) => chat.isGroup);
     const directChats = chats.filter((chat) => !chat.isGroup);
     const [showChannels, setShowChannels] = useState(true);
     const [showDMs, setShowDMs] = useState(true);
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+    const currentUser: User | null =
+        typeof window !== 'undefined'
+            ? JSON.parse(localStorage.getItem('user') ?? 'null')
+            : null;
 
     return (
         <aside className="bg-sidebar border-sidebar-border flex w-64 shrink-0 flex-col border-r">
@@ -44,18 +53,26 @@ export function Sidebar({
             <ScrollArea className="flex-1">
                 {/* Channels Section */}
                 <div className="px-3 py-2">
-                    <button
-                        onClick={() => setShowChannels((prev) => !prev)}
-                        className="text-muted-foreground hover:text-foreground mb-2 flex items-center gap-1 text-xs font-semibold tracking-wider uppercase transition-colors"
-                    >
-                        <ChevronDown
-                            className={cn(
-                                'h-3 w-3 transition-transform',
-                                !showChannels && '-rotate-90',
-                            )}
-                        />
-                        Channels
-                    </button>
+                    <div className="mb-2 flex items-center justify-between">
+                        <button
+                            onClick={() => setShowChannels((prev) => !prev)}
+                            className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs font-semibold tracking-wider uppercase transition-colors"
+                        >
+                            <ChevronDown
+                                className={cn(
+                                    'h-3 w-3 transition-transform',
+                                    !showChannels && '-rotate-90',
+                                )}
+                            />
+                            Channels
+                        </button>
+                        <button
+                            onClick={() => setIsCreateOpen(true)}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            <Plus className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
                     {showChannels && (
                         <div className="space-y-0.5">
                             {loading ? (
@@ -78,18 +95,26 @@ export function Sidebar({
 
                 {/* Direct Messages Section */}
                 <div className="px-3 py-2">
-                    <button
-                        onClick={() => setShowDMs((prev) => !prev)}
-                        className="text-muted-foreground hover:text-foreground mb-2 flex items-center gap-1 text-xs font-semibold tracking-wider uppercase transition-colors"
-                    >
-                        <ChevronDown
-                            className={cn(
-                                'h-3 w-3 transition-transform',
-                                !showDMs && '-rotate-90',
-                            )}
-                        />
-                        Direct Messages
-                    </button>
+                    <div className="mb-2 flex items-center justify-between">
+                        <button
+                            onClick={() => setShowDMs((prev) => !prev)}
+                            className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs font-semibold tracking-wider uppercase transition-colors"
+                        >
+                            <ChevronDown
+                                className={cn(
+                                    'h-3 w-3 transition-transform',
+                                    !showDMs && '-rotate-90',
+                                )}
+                            />
+                            Direct Messages
+                        </button>
+                        <button
+                            onClick={() => setIsCreateOpen(true)}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            <Plus className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
                     {showDMs && (
                         <div className="space-y-0.5">
                             {loading ? (
@@ -103,6 +128,7 @@ export function Sidebar({
                                         onSelect={() =>
                                             onSelectChannel(chat.id)
                                         }
+                                        currentUserId={currentUser?.id}
                                     />
                                 ))
                             )}
@@ -110,6 +136,15 @@ export function Sidebar({
                     )}
                 </div>
             </ScrollArea>
+            <CreateChatDialog
+                isOpen={isCreateOpen}
+                onClose={() => setIsCreateOpen(false)}
+                onSuccess={() => {
+                    setIsCreateOpen(false);
+                    onSuccess();
+                }}
+                chats={chats}
+            />
         </aside>
     );
 }
@@ -154,12 +189,16 @@ function DirectMessageItem({
     chat,
     isSelected,
     onSelect,
+    currentUserId,
 }: {
     chat: Chat;
     isSelected: boolean;
     onSelect: () => void;
+    currentUserId: string | undefined;
 }) {
-    const partner = chat.participants[0]?.user;
+    const partner = chat.participants.find(
+        (p) => p.user.id !== currentUserId,
+    )?.user;
     const lastMessage = chat.messages.at(-1);
     const initials = partner?.username.slice(0, 2).toUpperCase() ?? '??';
 

@@ -12,7 +12,7 @@ export default function Home() {
     const searchParams = useSearchParams();
     const selectedChannel = searchParams.get('chat');
 
-    const { chats, loading } = useChats();
+    const { chats, loading, refetch } = useChats();
     const currentChat = chats.find((chat) => chat.id === selectedChannel);
 
     const chatName = currentChat?.name ?? 'Select a channel';
@@ -31,6 +31,7 @@ export default function Home() {
                     onSelectChannel={handleSelectChannel}
                     chats={chats}
                     loading={loading}
+                    onSuccess={refetch}
                 />
 
                 <ChatArea channelName={chatName} chatId={selectedChannel} />
