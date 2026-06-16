@@ -1,9 +1,4 @@
-import {
-    ConflictException,
-    ForbiddenException,
-    Injectable,
-    NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException, } from '@nestjs/common';
 import { Role } from '../../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddMemberDto } from './dto/add-member.dto';
@@ -14,6 +9,24 @@ export class ChatService {
     constructor(private readonly prisma: PrismaService) {}
 
     async createChat(userId: string, dto: CreateChatDto) {
+        if (!dto.isGroup) {
+            const existing = await this.prisma.chat.findFirst({
+                where: {
+                    isGroup: false,
+                    AND: [
+                        { participants: { some: { userId } } },
+                        {
+                            participants: {
+                                some: { userId: dto.memberIds[0] },
+                            },
+                        },
+                    ],
+                },
+            });
+            if (existing)
+                throw new ConflictException('Direct chat already exists');
+        }
+
         const newChat = await this.prisma.chat.create({
             data: {
                 name: dto.name,
