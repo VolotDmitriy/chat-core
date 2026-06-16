@@ -7,7 +7,8 @@ export function useChats() {
     const [chats, setChats] = useState<Chat[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
+    const fetchChats = () => {
+        setLoading(true);
         api.get<Chat[]>('/chat')
             .then((res) => setChats(res.data))
             .catch((error) => {
@@ -15,7 +16,11 @@ export function useChats() {
                 setChats([]);
             })
             .finally(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        fetchChats();
     }, []);
 
-    return { chats, loading };
+    return { chats, loading, refetch: fetchChats };
 }
