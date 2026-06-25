@@ -26,13 +26,29 @@ export function Sidebar({
     onSelectChannel,
     onSuccess,
 }: SidebarProps) {
-    const groupChats = chats.filter((chat) => chat.isGroup);
-    const directChats = chats.filter((chat) => !chat.isGroup);
     const [showChannels, setShowChannels] = useState(true);
     const [showDMs, setShowDMs] = useState(true);
+    const [search, setSearch] = useState('');
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const { currentUser } = useAuth();
+    const { groupChats, directChats } = chatFilter(search.toLowerCase());
 
+    function chatFilter(query: string) {
+        const groupChats = chats.filter(
+            (chat) =>
+                chat.isGroup && (chat.name ?? '').toLowerCase().includes(query),
+        );
+        const directChats = chats.filter((chat) => {
+            if (chat.isGroup) return false;
+            const partner = chat.participants.find(
+                (partner) => partner.user.id !== currentUser?.id,
+            );
+            return (
+                partner?.user.username?.toLowerCase().includes(query) ?? true
+            );
+        });
+        return { groupChats, directChats };
+    }
     return (
         <aside className="bg-sidebar border-sidebar-border flex w-64 shrink-0 flex-col border-r">
             {/* Search */}
@@ -40,6 +56,8 @@ export function Sidebar({
                 <div className="relative">
                     <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                     <Input
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search..."
                         aria-label="Search"
                         className="bg-sidebar-accent border-sidebar-border h-9 pl-9 text-sm"
