@@ -3,11 +3,12 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/context/auth-context';
 import { useMessages } from '@/hooks/use-messages';
 import { type Message } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Hash, Paperclip, Pin, Send, Smile, Users } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { EmojiPicker } from './emoji-picker';
 
 interface ChatAreaProps {
@@ -21,17 +22,9 @@ export function ChatArea({ channelName, chatId }: ChatAreaProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const { messages, sendMessage } = useMessages(chatId);
-    const currentUserId = useMemo(() => {
-        if (typeof window === 'undefined') return null;
-        try {
-            return (
-                JSON.parse(localStorage.getItem('user') ?? 'null')?.id ?? null
-            );
-        } catch {
-            return null;
-        }
-    }, []);
     const [isSending, setIsSending] = useState(false);
+    const { currentUser } = useAuth();
+    const currentUserId = currentUser?.id ?? null;
 
     useEffect(() => {
         if (scrollRef.current) {

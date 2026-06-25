@@ -4,7 +4,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { SpinnerEmpty } from '@/components/ui/loading';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { Chat, User } from '@/lib/types';
+import { useAuth } from '@/context/auth-context';
+import type { Chat } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ChevronDown, Hash, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
@@ -30,11 +31,7 @@ export function Sidebar({
     const [showChannels, setShowChannels] = useState(true);
     const [showDMs, setShowDMs] = useState(true);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
-
-    const currentUser: User | null =
-        typeof window !== 'undefined'
-            ? JSON.parse(localStorage.getItem('user') ?? 'null')
-            : null;
+    const { currentUser } = useAuth();
 
     return (
         <aside className="bg-sidebar border-sidebar-border flex w-64 shrink-0 flex-col border-r">
