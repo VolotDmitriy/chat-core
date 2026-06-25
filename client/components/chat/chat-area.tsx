@@ -14,9 +14,11 @@ import { EmojiPicker } from './emoji-picker';
 interface ChatAreaProps {
     channelName: string;
     chatId: string | null;
+    onToggleMembers?: () => void;
+    isMembersOpen?: boolean;
 }
 
-export function ChatArea({ channelName, chatId }: ChatAreaProps) {
+export function ChatArea({ channelName, chatId, onToggleMembers, isMembersOpen }: ChatAreaProps) {
     const [inputValue, setInputValue] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -74,8 +76,14 @@ export function ChatArea({ channelName, chatId }: ChatAreaProps) {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="text-muted-foreground hover:text-foreground h-8 w-8"
-                        aria-label="Add users"
+                        className={cn(
+                            'h-8 w-8',
+                            isMembersOpen
+                                ? 'text-foreground'
+                                : 'text-muted-foreground hover:text-foreground',
+                        )}
+                        aria-label="Toggle members panel"
+                        onClick={onToggleMembers}
                     >
                         <Users className="h-4 w-4" />
                     </Button>

@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/chat/sidebar';
 import { Topbar } from '@/components/chat/topbar';
 import { useChats } from '@/hooks/use-chats';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 
 export default function Home() {
     const router = useRouter();
@@ -14,6 +15,7 @@ export default function Home() {
 
     const { chats, loading, refetch } = useChats();
     const currentChat = chats.find((chat) => chat.id === selectedChannel);
+    const [isMembersOpen, setIsMembersOpen] = useState(true);
 
     const chatName = currentChat?.name ?? 'Select a channel';
 
@@ -34,10 +36,19 @@ export default function Home() {
                     onSuccess={refetch}
                 />
 
-                <ChatArea channelName={chatName} chatId={selectedChannel} />
+                <ChatArea
+                    channelName={chatName}
+                    chatId={selectedChannel}
+                    onToggleMembers={() => setIsMembersOpen((prev) => !prev)}
+                    isMembersOpen={isMembersOpen}
+                />
 
-                {currentChat && (
-                    <MembersPanel participants={currentChat.participants} />
+                {currentChat && isMembersOpen && (
+                    <MembersPanel
+                        participants={currentChat.participants}
+                        chatId={currentChat.id}
+                        onSuccess={refetch}
+                    />
                 )}
             </div>
         </div>
