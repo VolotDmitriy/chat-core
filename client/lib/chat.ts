@@ -16,3 +16,8 @@ export async function searchUsers(query: string) {
     const res = await api.get<User[]>('/user/search', { params: { q: query } });
     return res.data;
 }
+
+export async function addMember(chatId: string, userId: string) {
+    const res = await api.post<void>(`/chat/${chatId}/join`, { userId });
+    return res.data;
+}

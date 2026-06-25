@@ -1,98 +1,90 @@
 'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SpinnerEmpty } from '@/components/ui/loading';
+import { addMember, searchUsers } from '@/lib/chat';
+import { User } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Check, Search, UserPlus, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useDebounce } from 'use-debounce';
 
 interface AddMemberDialogProps {
     isOpen: boolean;
     onClose: () => void;
+    chatId: string;
+    participants: { user: User }[];
+    onSuccess: () => void;
 }
 
-const availableUsers = [
-    {
-        id: 'new1',
-        name: 'David Wilson',
-        email: 'david@company.com',
-        avatar: 'https://i.pravatar.cc/150?img=11',
-        role: 'Designer',
-    },
-    {
-        id: 'new2',
-        name: 'Emma Thompson',
-        email: 'emma@company.com',
-        avatar: 'https://i.pravatar.cc/150?img=12',
-        role: 'Marketing',
-    },
-    {
-        id: 'new3',
-        name: 'James Anderson',
-        email: 'james@company.com',
-        avatar: 'https://i.pravatar.cc/150?img=14',
-        role: 'Sales',
-    },
-    {
-        id: 'new4',
-        name: 'Olivia Martinez',
-        email: 'olivia@company.com',
-        avatar: 'https://i.pravatar.cc/150?img=16',
-        role: 'HR',
-    },
-    {
-        id: 'new5',
-        name: 'William Brown',
-        email: 'william@company.com',
-        avatar: 'https://i.pravatar.cc/150?img=17',
-        role: 'Finance',
-    },
-    {
-        id: 'new6',
-        name: 'Sophia Lee',
-        email: 'sophia@company.com',
-        avatar: 'https://i.pravatar.cc/150?img=20',
-        role: 'Engineering',
-    },
-];
-
-export function AddMemberDialog({ isOpen, onClose }: AddMemberDialogProps) {
+export function AddMemberDialog({
+    isOpen,
+    onClose,
+    chatId,
+    participants,
+    onSuccess,
+}: AddMemberDialogProps) {
     const [search, setSearch] = useState('');
-    const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+    const [results, setResults] = useState<User[]>([]);
+    const [selected, setSelected] = useState<User[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isAdding, setIsAdding] = useState(false);
+    const [debouncedSearch] = useDebounce(search, 300);
+
+    const existingIds = new Set(participants.map((p) => p.user.id));
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setIsLoading(true);
+        searchUsers(debouncedSearch)
+            .then((res) => {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
+                setResults(res);
+            })
+            .finally(() => {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
+                setIsLoading(false);
+            });
+    }, [debouncedSearch]);
 
     if (!isOpen) return null;
 
-    const filteredUsers = availableUsers.filter(
-        (user) =>
-            user.name.toLowerCase().includes(search.toLowerCase()) ||
-            user.email.toLowerCase().includes(search.toLowerCase()),
-    );
-
-    const toggleUser = (userId: string) => {
-        setSelectedUsers((prev) =>
-            prev.includes(userId)
-                ? prev.filter((id) => id !== userId)
-                : [...prev, userId],
+    const toggleUser = (user: User) => {
+        setSelected((prev) =>
+            prev.find((u) => u.id === user.id)
+                ? prev.filter((u) => u.id !== user.id)
+                : [...prev, user],
         );
     };
 
-    const handleAddMembers = () => {
-        // In a real app, this would add the members
-        onClose();
-        setSelectedUsers([]);
+    const handleAdd = async () => {
+        if (!selected.length) return;
+        setIsAdding(true);
+        try {
+            await Promise.all(selected.map((u) => addMember(chatId, u.id)));
+            onSuccess();
+            handleClose();
+        } finally {
+            setIsAdding(false);
+        }
+    };
+
+    const handleClose = () => {
         setSearch('');
+        setResults([]);
+        setSelected([]);
+        onClose();
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                onClick={onClose}
+                onClick={handleClose}
             />
 
-            {/* Dialog */}
             <div className="bg-card border-border relative w-full max-w-md rounded-xl border shadow-2xl">
                 {/* Header */}
                 <div className="border-border flex items-center justify-between border-b p-4">
@@ -106,104 +98,107 @@ export function AddMemberDialog({ isOpen, onClose }: AddMemberDialogProps) {
                         variant="ghost"
                         size="icon"
                         className="text-muted-foreground hover:text-foreground h-8 w-8"
-                        onClick={onClose}
+                        onClick={handleClose}
                     >
                         <X className="h-4 w-4" />
                     </Button>
                 </div>
 
-                {/* Search */}
-                <div className="border-border border-b p-4">
+                {/* Search + chips */}
+                <div className="border-border border-b p-4 space-y-3">
                     <div className="relative">
                         <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                         <Input
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search by name or email..."
-                            className="bg-input border-border text-foreground placeholder:text-muted-foreground pl-9"
+                            placeholder="Search by username or email..."
+                            className="bg-input border-border pl-9"
                         />
                     </div>
-                    {selectedUsers.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                            {selectedUsers.map((userId) => {
-                                const user = availableUsers.find(
-                                    (u) => u.id === userId,
-                                );
-                                if (!user) return null;
-                                return (
-                                    <div
-                                        key={userId}
-                                        className="bg-primary/20 text-primary flex items-center gap-1 rounded-full px-2 py-1 text-sm"
+                    {selected.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                            {selected.map((user) => (
+                                <div
+                                    key={user.id}
+                                    className="bg-primary/20 text-primary flex items-center gap-1 rounded-full px-2 py-1 text-sm"
+                                >
+                                    <span>{user.username}</span>
+                                    <button
+                                        onClick={() => toggleUser(user)}
+                                        className="hover:bg-primary/30 rounded-full p-0.5"
                                     >
-                                        <span>{user.name.split(' ')[0]}</span>
-                                        <button
-                                            onClick={() => toggleUser(userId)}
-                                            className="hover:bg-primary/30 rounded-full p-0.5"
-                                        >
-                                            <X className="h-3 w-3" />
-                                        </button>
-                                    </div>
-                                );
-                            })}
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
 
-                {/* User List */}
+                {/* Results */}
                 <div className="max-h-64 overflow-y-auto p-2">
-                    {filteredUsers.length === 0 ? (
-                        <div className="text-muted-foreground py-8 text-center">
-                            No users found
+                    {isLoading ? (
+                        <div className="py-6 text-center">
+                            <SpinnerEmpty />
+                        </div>
+                    ) : results.length === 0 ? (
+                        <div className="text-muted-foreground py-8 text-center text-sm">
+                            {search.length > 0
+                                ? 'No users found'
+                                : 'Start typing to search'}
                         </div>
                     ) : (
                         <div className="space-y-1">
-                            {filteredUsers.map((user) => {
-                                const isSelected = selectedUsers.includes(
-                                    user.id,
+                            {results.map((user) => {
+                                const isSelected = !!selected.find(
+                                    (u) => u.id === user.id,
                                 );
+                                const alreadyMember = existingIds.has(user.id);
                                 return (
                                     <button
                                         key={user.id}
-                                        onClick={() => toggleUser(user.id)}
+                                        onClick={() =>
+                                            !alreadyMember && toggleUser(user)
+                                        }
+                                        disabled={alreadyMember}
                                         className={cn(
                                             'flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors',
-                                            isSelected
-                                                ? 'bg-primary/20 text-foreground'
-                                                : 'hover:bg-muted/50 text-foreground',
+                                            alreadyMember
+                                                ? 'cursor-not-allowed opacity-50'
+                                                : isSelected
+                                                  ? 'bg-primary/20'
+                                                  : 'hover:bg-muted/50',
                                         )}
                                     >
-                                        <Avatar className="h-10 w-10">
-                                            <AvatarImage
-                                                src={user.avatar}
-                                                alt={user.name}
-                                            />
-                                            <AvatarFallback className="bg-muted text-sm">
-                                                {user.name
-                                                    .split(' ')
-                                                    .map((n) => n[0])
-                                                    .join('')}
+                                        <Avatar className="h-8 w-8 shrink-0">
+                                            <AvatarFallback className="bg-muted text-xs">
+                                                {user.username[0].toUpperCase()}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="min-w-0 flex-1">
-                                            <div className="truncate font-medium">
-                                                {user.name}
+                                            <div className="truncate text-sm font-medium">
+                                                {user.username}
                                             </div>
-                                            <div className="text-muted-foreground truncate text-sm">
-                                                {user.role} • {user.email}
+                                            <div className="text-muted-foreground truncate text-xs">
+                                                {alreadyMember
+                                                    ? 'Already a member'
+                                                    : user.email}
                                             </div>
                                         </div>
-                                        <div
-                                            className={cn(
-                                                'flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors',
-                                                isSelected
-                                                    ? 'bg-primary border-primary'
-                                                    : 'border-muted-foreground',
-                                            )}
-                                        >
-                                            {isSelected && (
-                                                <Check className="h-3 w-3 text-white" />
-                                            )}
-                                        </div>
+                                        {!alreadyMember && (
+                                            <div
+                                                className={cn(
+                                                    'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                                                    isSelected
+                                                        ? 'bg-primary border-primary'
+                                                        : 'border-muted-foreground',
+                                                )}
+                                            >
+                                                {isSelected && (
+                                                    <Check className="h-3 w-3 text-white" />
+                                                )}
+                                            </div>
+                                        )}
                                     </button>
                                 );
                             })}
@@ -214,18 +209,17 @@ export function AddMemberDialog({ isOpen, onClose }: AddMemberDialogProps) {
                 {/* Footer */}
                 <div className="border-border flex items-center justify-between border-t p-4">
                     <span className="text-muted-foreground text-sm">
-                        {selectedUsers.length} selected
+                        {selected.length} selected
                     </span>
                     <div className="flex items-center gap-2">
-                        <Button variant="ghost" onClick={onClose}>
+                        <Button variant="ghost" onClick={handleClose}>
                             Cancel
                         </Button>
                         <Button
-                            onClick={handleAddMembers}
-                            disabled={selectedUsers.length === 0}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                            onClick={handleAdd}
+                            disabled={selected.length === 0 || isAdding}
                         >
-                            Add Members
+                            {isAdding ? 'Adding...' : 'Add Members'}
                         </Button>
                     </div>
                 </div>

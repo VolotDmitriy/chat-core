@@ -11,9 +11,15 @@ import { AddMemberDialog } from './add-member-dialog';
 
 interface MembersPanelProps {
     participants: { user: User }[];
+    chatId: string;
+    onSuccess: () => void;
 }
 
-export function MembersPanel({ participants }: MembersPanelProps) {
+export function MembersPanel({
+    participants,
+    chatId,
+    onSuccess,
+}: MembersPanelProps) {
     const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
 
     // const onlineUsers = users.filter(
@@ -72,6 +78,9 @@ export function MembersPanel({ participants }: MembersPanelProps) {
             <AddMemberDialog
                 isOpen={isAddMemberOpen}
                 onClose={() => setIsAddMemberOpen(false)}
+                chatId={chatId}
+                participants={participants}
+                onSuccess={onSuccess}
             />
         </aside>
     );
