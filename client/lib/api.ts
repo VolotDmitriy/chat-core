@@ -18,16 +18,43 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+function clearAuthAndRedirect() {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+}
+
+let refreshPromise: Promise<string> | null = null;
+
 api.interceptors.response.use(
     (response) => response,
-    (error: AxiosError) => {
+    async (error: AxiosError) => {
         if (error.response && error.response.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('user');
-            window.location.href = '/login';
+            const refToken = localStorage.getItem('refreshToken');
+            if (!refToken) return clearAuthAndRedirect();
+
+            try {
+                if (!refreshPromise) {
+                    refreshPromise = api
+                        .post('/auth/refresh', { refreshToken: refToken })
+                        .then((res) => res.data.accessToken)
+                        .finally(() => (refreshPromise = null));
+                }
+
+                const newAccToken = await refreshPromise;
+
+                localStorage.setItem('accessToken', newAccToken);
+                document.cookie = `accessToken=${newAccToken}`;
+                error.config!.headers.Authorization = `Bearer ${newAccToken}`;
+
+                return api(error.config!);
+            } catch {
+                clearAuthAndRedirect();
+            }
         }
         return Promise.reject(error);
     },
 );
+
 export default api;
