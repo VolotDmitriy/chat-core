@@ -10,7 +10,7 @@ export function useChats() {
     const fetchChats = () => {
         setLoading(true);
         api.get<Chat[]>('/chat')
-            .then((res) => setChats(res.data))
+            .then((res) => setChats(Array.isArray(res.data) ? res.data : []))
             .catch((error) => {
                 errorHandler(error);
                 setChats([]);
@@ -19,6 +19,7 @@ export function useChats() {
     };
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchChats();
     }, []);
 
