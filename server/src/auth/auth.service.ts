@@ -19,10 +19,10 @@ export class AuthService {
     ) {}
 
     private async generateTokens(user: { id: string; email: string }) {
-        const accessToken = this.jwtService.sign({
-            sub: user.id,
-            email: user.email,
-        });
+        const accessToken = this.jwtService.sign(
+            { sub: user.id, email: user.email },
+            { expiresIn: '15m' },
+        );
         const refreshToken = randomUUID();
 
         await this.prisma.refreshToken.create({
@@ -117,10 +117,10 @@ export class AuthService {
             throw new UnauthorizedException('Invalid refresh token');
         }
 
-        const accessToken = this.jwtService.sign({
-            sub: user.id,
-            email: user.email,
-        });
+        const accessToken = this.jwtService.sign(
+            { sub: user.id, email: user.email },
+            { expiresIn: '15m' },
+        );
 
         return { accessToken };
     }
