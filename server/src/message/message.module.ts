@@ -8,5 +8,6 @@ import { MessageService } from './message.service';
     imports: [AuthModule],
     controllers: [MessageController],
     providers: [MessageService, PrismaService],
+    exports: [MessageService],
 })
 export class MessageModule {}
