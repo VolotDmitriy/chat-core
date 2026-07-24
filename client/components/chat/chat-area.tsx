@@ -9,6 +9,7 @@ import { type Message } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Hash, Paperclip, Pin, Send, Smile, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { Socket } from 'socket.io-client';
 import { EmojiPicker } from './emoji-picker';
 
 interface ChatAreaProps {
@@ -16,17 +17,30 @@ interface ChatAreaProps {
     chatId: string | null;
     onToggleMembers?: () => void;
     isMembersOpen?: boolean;
+    socket: Socket | null;
 }
 
-export function ChatArea({ channelName, chatId, onToggleMembers, isMembersOpen }: ChatAreaProps) {
+export function ChatArea({
+    channelName,
+    chatId,
+    onToggleMembers,
+    isMembersOpen,
+    socket,
+}: ChatAreaProps) {
     const [inputValue, setInputValue] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const { messages, sendMessage } = useMessages(chatId);
+
     const [isSending, setIsSending] = useState(false);
     const { currentUser } = useAuth();
     const currentUserId = currentUser?.id ?? null;
+
+    const { messages, sendMessage } = useMessages({
+        chatId,
+        socket,
+        currentUser,
+    });
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -145,6 +159,12 @@ export function ChatArea({ channelName, chatId, onToggleMembers, isMembersOpen }
                         className="max-h-32 min-h-8 resize-none border-0 bg-transparent p-3 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
                         rows={1}
                         aria-label="Message input"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                void handleSend();
+                            }
+                        }}
                     />
                     <div className="relative">
                         <Button

@@ -5,6 +5,7 @@ import { MembersPanel } from '@/components/chat/members-panel';
 import { Sidebar } from '@/components/chat/sidebar';
 import { Topbar } from '@/components/chat/topbar';
 import { useChats } from '@/hooks/use-chats';
+import { useSocket } from '@/hooks/use-socket';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
@@ -16,6 +17,7 @@ export default function Home() {
     const { chats, loading, refetch } = useChats();
     const currentChat = chats.find((chat) => chat.id === selectedChannel);
     const [isMembersOpen, setIsMembersOpen] = useState(true);
+    const socket = useSocket();
 
     const chatName = currentChat?.name ?? 'Select a channel';
 
@@ -41,6 +43,7 @@ export default function Home() {
                     chatId={selectedChannel}
                     onToggleMembers={() => setIsMembersOpen((prev) => !prev)}
                     isMembersOpen={isMembersOpen}
+                    socket={socket}
                 />
 
                 {currentChat && isMembersOpen && (
