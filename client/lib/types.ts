@@ -15,6 +15,7 @@ export interface Chat {
 
 export interface Message {
     id: string;
+    chatId: string;
     content: string;
     createdAt: Date;
     sender: User;
