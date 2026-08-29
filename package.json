@@ -16,6 +16,7 @@
   },
   "scripts": {
     "format": "prettier --write 'client/**/*.{js,ts,jsx,tsx,css}' 'server/**/*.{js,ts}'",
+    "db": "net start postgresql-x64-18",
     "client": "yarn workspace client dev",
     "server": "yarn workspace server dev",
     "app": "concurrently \"yarn workspace client dev\" \"yarn workspace server dev\"",
