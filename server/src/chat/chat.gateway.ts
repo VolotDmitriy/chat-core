@@ -8,6 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { DefaultEventsMap, Server, Socket } from 'socket.io';
 import { MessageService } from '../message/message.service';
+import { ParticipantService } from '../participant/participant.service';
 import { ChatService } from './chat.service';
 
 type AuthSocket = Socket<
@@ -27,6 +28,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         private readonly jwtService: JwtService,
         private readonly chatService: ChatService,
         private readonly messageService: MessageService,
+        private readonly participantService: ParticipantService,
     ) {}
 
     @WebSocketServer()
@@ -73,5 +75,31 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             { content: payload.content },
         );
         this.server.to(payload.chatId).emit('message:new', message);
+    }
+
+    @SubscribeMessage('typing:start')
+    async handleTypingStart(client: AuthSocket, payload: { chatId: string }) {
+        const userId = client.data.userId;
+        const isParticipant = await this.participantService.isParticipant(
+            payload.chatId,
+            userId,
+        );
+        if (!isParticipant) {
+            return;
+        }
+        client.to(payload.chatId).emit('typing:start', { userId });
+    }
+
+    @SubscribeMessage('typing:stop')
+    async handleTypingStop(client: AuthSocket, payload: { chatId: string }) {
+        const userId = client.data.userId;
+        const isParticipant = await this.participantService.isParticipant(
+            payload.chatId,
+            userId,
+        );
+        if (!isParticipant) {
+            return;
+        }
+        client.to(payload.chatId).emit('typing:stop', { userId });
     }
 }
