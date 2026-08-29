@@ -5,13 +5,17 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { Role } from '../../generated/prisma/enums';
+import { ParticipantService } from '../participant/participant.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateChatDto } from './dto/create-chat.dto';
 
 @Injectable()
 export class ChatService {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly participantService: ParticipantService,
+    ) {}
 
     async createChat(userId: string, dto: CreateChatDto) {
         if (!dto.isGroup) {
@@ -86,28 +90,17 @@ export class ChatService {
             throw new NotFoundException('User not found');
         }
 
-        const existingParticipant = await this.prisma.participant.findUnique({
-            where: {
-                userId_chatId: {
-                    chatId,
-                    userId: dto.userId,
-                },
-            },
-        });
-        if (existingParticipant) {
+        const alreadyMember = await this.participantService.isParticipant(
+            chatId,
+            dto.userId,
+        );
+        if (alreadyMember) {
             throw new ConflictException('User is already a participant');
         }
 
-        const isParticipant = await this.prisma.chat.findFirst({
-            where: {
-                id: chatId,
-                participants: {
-                    some: { userId },
-                },
-            },
-        });
-
-        if (!isParticipant) {
+        const requesterIsParticipant =
+            await this.participantService.isParticipant(chatId, userId);
+        if (!requesterIsParticipant) {
             throw new ForbiddenException(
                 'User is not a participant of the chat',
             );

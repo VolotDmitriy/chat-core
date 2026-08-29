@@ -1,18 +1,20 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ParticipantService } from '../participant/participant.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 
 @Injectable()
 export class MessageService {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly participantService: ParticipantService,
+    ) {}
 
     private async checkParticipant(chatId: string, userId: string) {
-        const isParticipant = await this.prisma.participant.findFirst({
-            where: {
-                chatId,
-                userId,
-            },
-        });
+        const isParticipant = await this.participantService.isParticipant(
+            chatId,
+            userId,
+        );
         if (!isParticipant) {
             throw new ForbiddenException(
                 'User is not a participant of the chat',
