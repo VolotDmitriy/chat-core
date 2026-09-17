@@ -69,3 +69,7 @@ coverage/
 /client/node_modules/*
 /client/.env
 /yarn.lock
+
+# Локальные артефакты, не относящиеся к коду
+/server/prisma/img.png
+/server/src/___TASK.txt

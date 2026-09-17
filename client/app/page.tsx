@@ -41,6 +41,7 @@ export default function Home() {
                 <ChatArea
                     channelName={chatName}
                     chatId={selectedChannel}
+                    participants={currentChat?.participants}
                     onToggleMembers={() => setIsMembersOpen((prev) => !prev)}
                     isMembersOpen={isMembersOpen}
                     socket={socket}

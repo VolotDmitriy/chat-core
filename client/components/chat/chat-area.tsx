@@ -5,16 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/context/auth-context';
 import { useMessages } from '@/hooks/use-messages';
-import { type Message } from '@/lib/types';
+import { useTyping } from '@/hooks/use-typing';
+import { type Message, User } from '@/lib/types';
+import { formatTyping } from '@/lib/typing';
 import { cn } from '@/lib/utils';
 import { Hash, Paperclip, Pin, Send, Smile, Users } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { Socket } from 'socket.io-client';
+import { useDebounce } from 'use-debounce';
 import { EmojiPicker } from './emoji-picker';
 
 interface ChatAreaProps {
     channelName: string;
     chatId: string | null;
+    participants: { user: User }[] | undefined;
     onToggleMembers?: () => void;
     isMembersOpen?: boolean;
     socket: Socket | null;
@@ -23,11 +27,13 @@ interface ChatAreaProps {
 export function ChatArea({
     channelName,
     chatId,
+    participants,
     onToggleMembers,
     isMembersOpen,
     socket,
 }: ChatAreaProps) {
     const [inputValue, setInputValue] = useState('');
+    const [debouncedValue] = useDebounce(inputValue, 500);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -42,12 +48,28 @@ export function ChatArea({
         currentUser,
     });
 
+    const { usersIds, startTyping, stopTyping } = useTyping({
+        chatId,
+        socket,
+    });
+
+    const typingUsers = participants?.map((p) => p.user) ?? [];
+    const formatedString = formatTyping(usersIds, typingUsers, currentUser?.id);
+
+    useEffect(() => {
+        stopTyping();
+    }, [debouncedValue]);
+
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [messages]);
 
+    const handleTyping = (event: ChangeEvent<HTMLTextAreaElement>) => {
+        startTyping();
+        setInputValue(event.target.value);
+    };
     const handleEmojiSelect = (emoji: string) => {
         setInputValue((prev) => prev + emoji);
         setShowEmojiPicker(false);
@@ -116,27 +138,29 @@ export function ChatArea({
                     ))}
 
                     {/* Typing Indicator */}
-                    {/*        <div className="flex items-center gap-2">*/}
-                    {/*            <Avatar className="h-8 w-8">*/}
-                    {/*                <AvatarImage*/}
-                    {/*                    src={users[0].avatar}*/}
-                    {/*                    alt={users[0].name}*/}
-                    {/*                />*/}
-                    {/*                <AvatarFallback className="bg-muted text-xs">*/}
-                    {/*                    SC*/}
-                    {/*                </AvatarFallback>*/}
-                    {/*            </Avatar>*/}
-                    {/*            <div className="bg-card rounded-2xl rounded-bl-sm px-4 py-2">*/}
-                    {/*                <div className="flex items-center gap-1">*/}
-                    {/*                    <span className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:-0.3s]" />*/}
-                    {/*                    <span className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:-0.15s]" />*/}
-                    {/*                    <span className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full" />*/}
-                    {/*                </div>*/}
-                    {/*            </div>*/}
-                    {/*            <span className="text-muted-foreground text-xs">*/}
-                    {/*                Sarah is typing...*/}
-                    {/*            </span>*/}
-                    {/*        </div>*/}
+                    {formatedString && (
+                        <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                                {/*<AvatarImage*/}
+                                {/*    src={users[0].avatar}*/}
+                                {/*    alt={users[0].name}*/}
+                                {/*/>*/}
+                                <AvatarFallback className="bg-muted text-xs">
+                                    SC
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="bg-card rounded-2xl rounded-bl-sm px-4 py-2">
+                                <div className="flex items-center gap-1">
+                                    <span className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:-0.3s]" />
+                                    <span className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:-0.15s]" />
+                                    <span className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full" />
+                                </div>
+                            </div>
+                            <span className="text-muted-foreground text-xs">
+                                {formatedString}
+                            </span>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -154,7 +178,7 @@ export function ChatArea({
                     <Textarea
                         ref={textareaRef}
                         value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
+                        onChange={handleTyping}
                         placeholder={`Message #${channelName}`}
                         className="max-h-32 min-h-8 resize-none border-0 bg-transparent p-3 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
                         rows={1}

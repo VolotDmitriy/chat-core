@@ -9,6 +9,7 @@ interface useTypingParams {
 export function useTyping({ chatId, socket }: useTypingParams) {
     const [usersIds, setUserIds] = useState<string[]>([]);
     const timers = useRef<Map<string, NodeJS.Timeout>>(new Map());
+    const isTyping = useRef(false);
 
     useEffect(() => {
         if (!socket || !chatId) return;
@@ -50,11 +51,15 @@ export function useTyping({ chatId, socket }: useTypingParams) {
 
     const startTyping = () => {
         if (!chatId || !socket) return;
+        if (isTyping.current) return;
+        isTyping.current = true;
         socket.emit('typing:start', { chatId });
     };
 
     const stopTyping = () => {
         if (!chatId || !socket) return;
+        if (!isTyping.current) return;
+        isTyping.current = false;
         socket.emit('typing:stop', { chatId });
     };
 

@@ -105,7 +105,7 @@ export function AddMemberDialog({
                 </div>
 
                 {/* Search + chips */}
-                <div className="border-border border-b p-4 space-y-3">
+                <div className="border-border space-y-3 border-b p-4">
                     <div className="relative">
                         <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                         <Input
