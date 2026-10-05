@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/context/auth-context';
 import { register } from '@/lib/auth';
 import { errorHandler } from '@/lib/error-handler';
 import Link from 'next/link';
@@ -17,6 +18,8 @@ export default function RegisterPage() {
         password: '',
     });
 
+    const { setCurrentUser } = useAuth();
+
     const router = useRouter();
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -27,11 +30,12 @@ export default function RegisterPage() {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         try {
-            await register(
+            const user = await register(
                 formData.username,
                 formData.email,
                 formData.password,
             );
+            setCurrentUser(user);
             router.push('/');
             console.log(formData);
         } catch (error) {

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/context/auth-context';
 import { login } from '@/lib/auth';
 import { errorHandler } from '@/lib/error-handler';
 import Link from 'next/link';
@@ -15,7 +16,7 @@ export default function LoginPage() {
         email: '',
         password: '',
     });
-
+    const { setCurrentUser } = useAuth();
     const router = useRouter();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,7 +27,8 @@ export default function LoginPage() {
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
-            await login(formData.email, formData.password);
+            const user = await login(formData.email, formData.password);
+            setCurrentUser(user);
             router.push('/');
             console.log(formData);
         } catch (error) {

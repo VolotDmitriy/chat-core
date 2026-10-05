@@ -1,12 +1,13 @@
 import api from '@/lib/api';
+import { User } from '@/lib/types';
 
 interface AuthResponse {
     accessToken: string;
     refreshToken: string;
-    user: { id: string; email: string; username: string };
+    user: User;
 }
 
-export async function login(email: string, password: string): Promise<void> {
+export async function login(email: string, password: string): Promise<User> {
     const { data } = await api.post<AuthResponse>('/auth/login', {
         email,
         password,
@@ -15,13 +16,14 @@ export async function login(email: string, password: string): Promise<void> {
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('user', JSON.stringify(data.user));
+    return data.user;
 }
 
 export async function register(
     username: string,
     email: string,
     password: string,
-): Promise<void> {
+): Promise<User> {
     const { data } = await api.post<AuthResponse>('/auth/register', {
         username,
         email,
@@ -31,6 +33,7 @@ export async function register(
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('user', JSON.stringify(data.user));
+    return data.user;
 }
 
 export async function logout(): Promise<void> {

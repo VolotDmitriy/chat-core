@@ -3,7 +3,9 @@
 import { User } from '@/lib/types';
 import {
     createContext,
+    Dispatch,
     ReactNode,
+    SetStateAction,
     useContext,
     useEffect,
     useState,
@@ -11,13 +13,16 @@ import {
 
 interface AuthContextType {
     currentUser: User | null;
+    setCurrentUser: Dispatch<SetStateAction<User | null>>;
 }
 
-const AuthContext = createContext<AuthContextType>({ currentUser: null });
+const AuthContext = createContext<AuthContextType>({
+    currentUser: null,
+    setCurrentUser: () => {},
+});
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
-
     useEffect(() => {
         const user = localStorage.getItem('user');
         if (!user) return;
@@ -30,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ currentUser }}>
+        <AuthContext.Provider value={{ currentUser, setCurrentUser }}>
             {children}
         </AuthContext.Provider>
     );
