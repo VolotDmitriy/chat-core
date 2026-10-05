@@ -48,13 +48,21 @@ export function ChatArea({
         currentUser,
     });
 
-    const { usersIds, startTyping, stopTyping } = useTyping({
+    const {
+        usersIds: typingUsers,
+        startTyping,
+        stopTyping,
+    } = useTyping({
         chatId,
         socket,
     });
 
-    const typingUsers = participants?.map((p) => p.user) ?? [];
-    const formatedString = formatTyping(usersIds, typingUsers, currentUser?.id);
+    const channelUsers = participants?.map((p) => p.user) ?? [];
+    const formatedString = formatTyping(
+        typingUsers,
+        channelUsers,
+        currentUser?.id,
+    );
 
     useEffect(() => {
         stopTyping();
@@ -64,7 +72,7 @@ export function ChatArea({
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [messages]);
+    }, [messages, formatedString]);
 
     const handleTyping = (event: ChangeEvent<HTMLTextAreaElement>) => {
         startTyping();
@@ -86,6 +94,7 @@ export function ChatArea({
             setIsSending(false);
         }
     };
+
     return (
         <div className="bg-background flex min-w-0 flex-1 flex-col">
             {/* Chat Header */}
