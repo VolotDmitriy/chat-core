@@ -2,8 +2,13 @@ import api from '@/lib/api';
 import { errorHandler } from '@/lib/error-handler';
 import type { Chat } from '@/lib/types';
 import { useEffect, useState } from 'react';
+import { Socket } from 'socket.io-client';
 
-export function useChats() {
+interface useChatParams {
+    socket: Socket | null;
+}
+
+export function useChats({ socket }: useChatParams) {
     const [chats, setChats] = useState<Chat[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -17,6 +22,14 @@ export function useChats() {
             })
             .finally(() => setLoading(false));
     };
+
+    useEffect(() => {
+        if (!socket) return;
+        socket.on('chat:added', fetchChats);
+        return () => {
+            socket.off('chat:added', fetchChats);
+        };
+    }, [socket]);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect

@@ -14,10 +14,10 @@ export default function Home() {
     const searchParams = useSearchParams();
     const selectedChannel = searchParams.get('chat');
 
-    const { chats, loading, refetch } = useChats();
+    const socket = useSocket();
+    const { chats, loading, refetch } = useChats({ socket });
     const currentChat = chats.find((chat) => chat.id === selectedChannel);
     const [isMembersOpen, setIsMembersOpen] = useState(true);
-    const socket = useSocket();
 
     const chatName = currentChat?.name ?? 'Select a channel';
 
