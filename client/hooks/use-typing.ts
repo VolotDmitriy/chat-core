@@ -16,6 +16,7 @@ export function useTyping({ chatId, socket }: useTypingParams) {
         const currentTimers = timers.current;
 
         socket.on('typing:start', (data) => {
+            if (data.chatId !== chatId) return;
             //delete old timer
             const oldtimer = currentTimers.get(data.userId);
             if (oldtimer) clearTimeout(oldtimer);
@@ -36,11 +37,12 @@ export function useTyping({ chatId, socket }: useTypingParams) {
             );
         });
 
-        socket.on('typing:stop', (data) =>
+        socket.on('typing:stop', (data) => {
+            if (data.chatId !== chatId) return;
             setUserIds((prev) =>
                 prev.filter((prevId) => prevId !== data.userId),
-            ),
-        );
+            );
+        });
         return () => {
             socket.off('typing:start');
             socket.off('typing:stop');

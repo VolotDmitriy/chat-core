@@ -118,7 +118,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (!isParticipant) {
             return;
         }
-        client.to(payload.chatId).emit('typing:start', { userId });
+        client
+            .to(payload.chatId)
+            .emit('typing:start', { userId, chatId: payload.chatId });
     }
 
     @SubscribeMessage('typing:stop')
@@ -131,6 +133,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (!isParticipant) {
             return;
         }
-        client.to(payload.chatId).emit('typing:stop', { userId });
+        client
+            .to(payload.chatId)
+            .emit('typing:stop', { userId, chatId: payload.chatId });
     }
 }
