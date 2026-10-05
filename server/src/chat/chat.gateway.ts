@@ -33,6 +33,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     @WebSocketServer()
     server: Server;
+    private userSockets: Map<string, Socket[]> = new Map();
 
     async handleConnection(client: AuthSocket) {
         const token = client.handshake.auth.token as string | undefined;
@@ -47,6 +48,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             const userId = payload.sub;
             client.data.userId = userId;
 
+            const existingSockets = this.userSockets.get(userId);
+            if (existingSockets) {
+                existingSockets.push(client);
+            } else {
+                this.userSockets.set(userId, [client]);
+            }
+
             const chats = await this.chatService.getMyChats(userId);
             for (const chat of chats) {
                 void client.join(chat.id);
@@ -60,7 +68,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     handleDisconnect(client: AuthSocket) {
+        const userId = client.data.userId;
+        if (!userId) return;
+
+        const existingSockets = this.userSockets.get(userId);
+        if (existingSockets) {
+            const index = existingSockets.indexOf(client);
+            if (index > -1) {
+                existingSockets.splice(index, 1);
+            }
+            if (existingSockets.length === 0) {
+                this.userSockets.delete(userId);
+            }
+        }
+
         console.log('Client disconnected:', client.id);
+    }
+
+    public async joinUsers(userId: string, chatId: string) {
+        const sockets = this.userSockets.get(userId);
+        if (!sockets) return;
+        for (const socket of sockets) {
+            await socket.join(chatId);
+            socket.emit('chat:added', { chatId });
+        }
     }
 
     @SubscribeMessage('message:send')
