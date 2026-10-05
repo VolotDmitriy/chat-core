@@ -27,7 +27,7 @@ export function useMessages({
         return () => {
             socket.off('message:new');
         };
-    }, [socket]);
+    }, [socket, chatId]);
 
     useEffect(() => {
         if (!chatId) return;
