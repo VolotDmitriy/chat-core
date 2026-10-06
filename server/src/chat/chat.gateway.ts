@@ -9,7 +9,7 @@ import {
 import { DefaultEventsMap, Server, Socket } from 'socket.io';
 import { MessageService } from '../message/message.service';
 import { ParticipantService } from '../participant/participant.service';
-import { ChatService } from './chat.service';
+import { ChatMembershipService } from './chat-membership.service';
 
 type AuthSocket = Socket<
     DefaultEventsMap,
@@ -26,7 +26,7 @@ type AuthSocket = Socket<
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     constructor(
         private readonly jwtService: JwtService,
-        private readonly chatService: ChatService,
+        private readonly chatMembershipService: ChatMembershipService,
         private readonly messageService: MessageService,
         private readonly participantService: ParticipantService,
     ) {}
@@ -55,9 +55,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 this.userSockets.set(userId, [client]);
             }
 
-            const chats = await this.chatService.getMyChats(userId);
-            for (const chat of chats) {
-                void client.join(chat.id);
+            const chatIds =
+                await this.chatMembershipService.getUserChatsIDs(userId);
+            for (const chatId of chatIds) {
+                void client.join(chatId);
             }
         } catch {
             client.disconnect();
