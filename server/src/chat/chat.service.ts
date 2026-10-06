@@ -7,6 +7,7 @@ import {
 import { Role } from '../../generated/prisma/enums';
 import { ParticipantService } from '../participant/participant.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ChatGateway } from './chat.gateway';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateChatDto } from './dto/create-chat.dto';
 
@@ -15,6 +16,7 @@ export class ChatService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly participantService: ParticipantService,
+        private readonly chatGateway: ChatGateway,
     ) {}
 
     async createChat(userId: string, dto: CreateChatDto) {
@@ -54,6 +56,11 @@ export class ChatService {
                 },
             },
         });
+
+        const participantsIds = [...dto.memberIds, userId];
+        for (const participantId of participantsIds) {
+            await this.chatGateway.joinUsers(participantId, newChat.id);
+        }
 
         return newChat;
     }
@@ -115,5 +122,11 @@ export class ChatService {
         });
 
         return newParticipant;
+    }
+
+    async syncOnlineMember(chatId: string, userId: string, dto: AddMemberDto) {
+        const member = await this.addMember(chatId, userId, dto);
+        await this.chatGateway.joinUsers(dto.userId, chatId);
+        return member;
     }
 }

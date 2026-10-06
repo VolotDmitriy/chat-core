@@ -9,17 +9,13 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import type { AuthRequest } from '../types/request.types';
-import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateChatDto } from './dto/create-chat.dto';
 
 @Controller('chat')
 export class ChatController {
-    constructor(
-        private readonly chatService: ChatService,
-        private readonly chatGateway: ChatGateway,
-    ) {}
+    constructor(private readonly chatService: ChatService) {}
 
     @UseGuards(JwtAuthGuard)
     @Post()
@@ -40,12 +36,10 @@ export class ChatController {
         @Req() req: AuthRequest,
         @Body() addMemberDto: AddMemberDto,
     ) {
-        const member = await this.chatService.addMember(
+        return this.chatService.syncOnlineMember(
             chatId,
             req.user.id,
             addMemberDto,
         );
-        await this.chatGateway.joinUsers(addMemberDto.userId, chatId);
-        return member;
     }
 }
