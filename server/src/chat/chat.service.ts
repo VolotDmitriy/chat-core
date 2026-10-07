@@ -65,6 +65,13 @@ export class ChatService {
         return newChat;
     }
 
+    onlineUsers(userIds: string[]) {
+        return userIds.map((userId) => ({
+            userId,
+            isOnline: this.chatGateway.isUserOnline(userId),
+        }));
+    }
+
     async getMyChats(userId: string) {
         const chats = await this.prisma.chat.findMany({
             where: {

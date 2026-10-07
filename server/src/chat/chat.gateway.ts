@@ -95,6 +95,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
     }
 
+    public isUserOnline(userId: string) {
+        return this.userSockets.has(userId);
+    }
+
     @SubscribeMessage('message:send')
     async handleMessage(
         client: AuthSocket,

@@ -12,6 +12,7 @@ import type { AuthRequest } from '../types/request.types';
 import { ChatService } from './chat.service';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateChatDto } from './dto/create-chat.dto';
+import { OnlineUsersDto } from './dto/user-online.dto';
 
 @Controller('chat')
 export class ChatController {
@@ -27,6 +28,12 @@ export class ChatController {
     @Get()
     getMyChats(@Req() req: AuthRequest) {
         return this.chatService.getMyChats(req.user.id);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('online-status')
+    isOnline(@Body() dto: OnlineUsersDto) {
+        return this.chatService.onlineUsers(dto.userIds);
     }
 
     @UseGuards(JwtAuthGuard)
