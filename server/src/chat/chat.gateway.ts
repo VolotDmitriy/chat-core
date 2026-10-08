@@ -60,6 +60,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             for (const chatId of chatIds) {
                 void client.join(chatId);
             }
+
+            for (const chatId of chatIds) {
+                this.server.to(chatId).emit('user:online', { userId });
+            }
         } catch {
             client.disconnect();
             return;
@@ -68,7 +72,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         console.log('Client connected:', client.id);
     }
 
-    handleDisconnect(client: AuthSocket) {
+    async handleDisconnect(client: AuthSocket) {
         const userId = client.data.userId;
         if (!userId) return;
 
@@ -79,7 +83,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 existingSockets.splice(index, 1);
             }
             if (existingSockets.length === 0) {
+                // last open connection for this user — safe to broadcast
+                // offline, otherwise another tab/device is still online
                 this.userSockets.delete(userId);
+
+                // Socket.IO clears rooms before "disconnect" fires,
+                // so fetch the user's chats from the database
+                const chatIds =
+                    await this.chatMembershipService.getUserChatsIDs(userId);
+                for (const chatId of chatIds) {
+                    this.server.to(chatId).emit('user:offline', { userId });
+                }
             }
         }
 
