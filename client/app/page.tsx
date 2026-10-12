@@ -51,6 +51,7 @@ export default function Home() {
                     <MembersPanel
                         participants={currentChat.participants}
                         chatId={currentChat.id}
+                        socket={socket}
                         onSuccess={refetch}
                     />
                 )}

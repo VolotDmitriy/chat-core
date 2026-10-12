@@ -13,13 +13,19 @@ interface onlineStatus {
     isOnline: boolean;
 }
 export function useOnlineStatus({ userIds, socket }: useOnlineStatusParams) {
-    const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+    const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
+    const offlineUserIds = getOffline();
+
+    function getOffline() {
+        if (!userIds) return new Set<string>();
+        return new Set(userIds.filter((id) => !onlineUserIds.has(id)));
+    }
 
     const fetchOnlineUsers = () => {
         if (!userIds) return;
         api.post<onlineStatus[]>('/chat/online-status', { userIds })
             .then((res) =>
-                setOnlineUsers(
+                setOnlineUserIds(
                     new Set(
                         res.data.filter((u) => u.isOnline).map((u) => u.userId),
                     ),
@@ -34,11 +40,11 @@ export function useOnlineStatus({ userIds, socket }: useOnlineStatusParams) {
         if (!socket) return;
 
         const addOnlineUser = ({ userId }: { userId: string }) => {
-            setOnlineUsers((prev) => new Set([...prev, userId]));
+            setOnlineUserIds((prev) => new Set([...prev, userId]));
         };
 
         const removeOnlineUser = ({ userId }: { userId: string }) => {
-            setOnlineUsers(
+            setOnlineUserIds(
                 (prev) => new Set([...prev].filter((x) => x !== userId)),
             );
         };
@@ -52,8 +58,16 @@ export function useOnlineStatus({ userIds, socket }: useOnlineStatusParams) {
     }, [socket]);
 
     useEffect(() => {
+        if (!socket) return;
+        socket.on('connect', fetchOnlineUsers);
+        return () => {
+            socket.off('connect', fetchOnlineUsers);
+        };
+    }, [socket, userIds]);
+
+    useEffect(() => {
         fetchOnlineUsers();
     }, [userIds]);
 
-    return { onlineUsers };
+    return { onlineUserIds, offlineUserIds };
 }
