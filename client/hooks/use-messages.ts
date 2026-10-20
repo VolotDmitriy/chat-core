@@ -17,15 +17,17 @@ export function useMessages({
 }: useMessagesParams) {
     const [messages, setMessages] = useState<Message[] | null>(null);
 
+    const messageHandler = (message: Message) => {
+        if (message.chatId !== chatId) return;
+        if (message.sender.id === currentUser?.id) return;
+        setMessages((prev) => (prev ? [...prev, message] : [message]));
+    };
+
     useEffect(() => {
         if (!socket) return;
-        socket.on('message:new', (message: Message) => {
-            if (message.chatId !== chatId) return;
-            if (message.sender.id === currentUser?.id) return;
-            setMessages((prev) => (prev ? [...prev, message] : [message]));
-        });
+        socket.on('message:new', messageHandler);
         return () => {
-            socket.off('message:new');
+            socket.off('message:new', messageHandler);
         };
     }, [socket, chatId]);
 
