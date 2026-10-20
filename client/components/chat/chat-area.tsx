@@ -41,6 +41,7 @@ export function ChatArea({
     const [isSending, setIsSending] = useState(false);
     const { currentUser } = useAuth();
     const currentUserId = currentUser?.id ?? null;
+    const emojiButtonRef = useRef<HTMLButtonElement>(null);
 
     const { messages, sendMessage } = useMessages({
         chatId,
@@ -205,6 +206,7 @@ export function ChatArea({
                             size="icon"
                             className="text-muted-foreground hover:text-foreground h-8 w-8 shrink-0"
                             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                            ref={emojiButtonRef}
                             aria-label="Add emoji"
                         >
                             <Smile className="h-4 w-4" />
@@ -212,6 +214,7 @@ export function ChatArea({
                         {showEmojiPicker && (
                             <EmojiPicker
                                 onEmojiSelect={handleEmojiSelect}
+                                emojiButtonRef={emojiButtonRef}
                                 onClose={() => setShowEmojiPicker(false)}
                             />
                         )}

@@ -2,21 +2,28 @@
 
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
-import { useEffect, useRef } from 'react';
+import { RefObject, useEffect, useRef } from 'react';
 
 interface EmojiPickerProps {
     onEmojiSelect: (emoji: string) => void;
+    emojiButtonRef: RefObject<HTMLButtonElement | null>;
     onClose: () => void;
 }
 
-export function EmojiPicker({ onEmojiSelect, onClose }: EmojiPickerProps) {
+export function EmojiPicker({
+    onEmojiSelect,
+    emojiButtonRef,
+    onClose,
+}: EmojiPickerProps) {
     const pickerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (
                 pickerRef.current &&
-                !pickerRef.current.contains(event.target as Node)
+                !pickerRef.current.contains(event.target as Node) &&
+                emojiButtonRef &&
+                !emojiButtonRef.current?.contains(event.target as Node)
             ) {
                 onClose();
             }
@@ -25,7 +32,7 @@ export function EmojiPicker({ onEmojiSelect, onClose }: EmojiPickerProps) {
         document.addEventListener('mousedown', handleClickOutside);
         return () =>
             document.removeEventListener('mousedown', handleClickOutside);
-    }, [onClose]);
+    }, [emojiButtonRef, onClose]);
 
     return (
         <div ref={pickerRef} className="absolute right-0 bottom-full z-50 mb-2">
