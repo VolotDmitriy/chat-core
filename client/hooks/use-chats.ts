@@ -1,6 +1,6 @@
 import api from '@/lib/api';
 import { errorHandler } from '@/lib/error-handler';
-import type { Chat } from '@/lib/types';
+import type { Chat, Message } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Socket } from 'socket.io-client';
 
@@ -22,6 +22,24 @@ export function useChats({ socket }: useChatParams) {
             })
             .finally(() => setLoading(false));
     };
+
+    const messageHandler = (message: Message) => {
+        setChats((prevChats) =>
+            prevChats.map((chat) =>
+                chat.id === message.chatId
+                    ? { ...chat, messages: [...chat.messages, message] }
+                    : chat,
+            ),
+        );
+    };
+
+    useEffect(() => {
+        if (!socket) return;
+        socket.on('message:new', messageHandler);
+        return () => {
+            socket.off('message:new', messageHandler);
+        };
+    }, [socket]);
 
     useEffect(() => {
         if (!socket) return;
