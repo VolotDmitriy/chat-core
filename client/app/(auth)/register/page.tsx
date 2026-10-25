@@ -37,7 +37,6 @@ export default function RegisterPage() {
             );
             setCurrentUser(user);
             router.push('/');
-            console.log(formData);
         } catch (error) {
             errorHandler(error);
         }

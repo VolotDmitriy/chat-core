@@ -30,7 +30,6 @@ export default function LoginPage() {
             const user = await login(formData.email, formData.password);
             setCurrentUser(user);
             router.push('/');
-            console.log(formData);
         } catch (error) {
             errorHandler(error);
         }

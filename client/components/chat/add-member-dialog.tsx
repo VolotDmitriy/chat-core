@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SpinnerEmpty } from '@/components/ui/loading';
 import { addMember, searchUsers } from '@/lib/chat';
+import { errorHandler } from '@/lib/error-handler';
 import { User } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Check, Search, UserPlus, X } from 'lucide-react';
@@ -40,11 +41,13 @@ export function AddMemberDialog({
         setIsLoading(true);
         searchUsers(debouncedSearch)
             .then((res) => {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setResults(res);
             })
+            .catch((error) => {
+                errorHandler(error);
+                setResults([]);
+            })
             .finally(() => {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setIsLoading(false);
             });
     }, [debouncedSearch]);
@@ -66,6 +69,8 @@ export function AddMemberDialog({
             await Promise.all(selected.map((u) => addMember(chatId, u.id)));
             onSuccess();
             handleClose();
+        } catch (error) {
+            errorHandler(error);
         } finally {
             setIsAdding(false);
         }

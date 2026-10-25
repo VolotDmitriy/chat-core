@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SpinnerEmpty } from '@/components/ui/loading';
 import { createChat, searchUsers } from '@/lib/chat';
+import { errorHandler } from '@/lib/error-handler';
 import { Chat, User } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Check, Hash, MessageCircle, Search, X } from 'lucide-react';
@@ -32,6 +33,7 @@ export function CreateChatDialog({
     const [results, setResults] = useState<User[]>([]);
     const [selected, setSelected] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
     const [debouncedSearch] = useDebounce(search, 300);
 
     useEffect(() => {
@@ -39,6 +41,10 @@ export function CreateChatDialog({
         setIsLoading(true);
         searchUsers(debouncedSearch)
             .then((res) => setResults(res))
+            .catch((error) => {
+                errorHandler(error);
+                setResults([]);
+            })
             .finally(() => setIsLoading(false));
     }, [debouncedSearch]);
 
@@ -65,13 +71,20 @@ export function CreateChatDialog({
     };
     const handleCreate = async () => {
         const isGroup = mode == 'group';
-        await createChat({
-            name: isGroup ? name : undefined,
-            isGroup,
-            memberIds: selected.map((u) => u.id),
-        });
-        onSuccess();
-        handleClose();
+        setIsCreating(true);
+        try {
+            await createChat({
+                name: isGroup ? name : undefined,
+                isGroup,
+                memberIds: selected.map((u) => u.id),
+            });
+            onSuccess();
+            handleClose();
+        } catch (error) {
+            errorHandler(error);
+        } finally {
+            setIsCreating(false);
+        }
     };
 
     const handleClose = () => {
@@ -190,7 +203,7 @@ export function CreateChatDialog({
                 {/* Results */}
                 <div className="max-h-52 overflow-y-auto px-2 pb-2">
                     {isLoading ? (
-                        <div className="py06 text-center">
+                        <div className="py-6 text-center">
                             <SpinnerEmpty />
                         </div>
                     ) : results.length === 0 && search.length > 0 ? (
@@ -268,10 +281,10 @@ export function CreateChatDialog({
                             Cancel
                         </Button>
                         <Button
-                            disabled={!canCreate || isLoading}
+                            disabled={!canCreate || isCreating}
                             onClick={handleCreate}
                         >
-                            {isLoading ? 'Creating...' : 'Create'}
+                            {isCreating ? 'Creating...' : 'Create'}
                         </Button>
                     </div>
                 </div>
