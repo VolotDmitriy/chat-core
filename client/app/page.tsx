@@ -27,6 +27,9 @@ export default function Home() {
         router.push(`/?chat=${id}`);
     };
 
+    const getTypingUserIds = (chatId: string | null) =>
+        (chatId && typingByChat[chatId]) || [];
+
     return (
         <div className="bg-background flex h-screen flex-col">
             <Topbar channelName={chatName} />
@@ -44,6 +47,7 @@ export default function Home() {
                 <ChatArea
                     channelName={chatName}
                     chatId={selectedChannel}
+                    typingUserIds={getTypingUserIds(selectedChannel)}
                     participants={currentChat?.participants}
                     onToggleMembers={() => setIsMembersOpen((prev) => !prev)}
                     isMembersOpen={isMembersOpen}

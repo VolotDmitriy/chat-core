@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/context/auth-context';
 import { useMessages } from '@/hooks/use-messages';
-import { useTyping } from '@/hooks/use-typing';
+import { useTypingEmitter } from '@/hooks/use-typing-emitter';
 import { type Message, User } from '@/lib/types';
 import { formatTyping } from '@/lib/typing';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,7 @@ import { EmojiPicker } from './emoji-picker';
 interface ChatAreaProps {
     channelName: string;
     chatId: string | null;
+    typingUserIds: string[];
     participants: { user: User }[] | undefined;
     onToggleMembers?: () => void;
     isMembersOpen?: boolean;
@@ -27,6 +28,7 @@ interface ChatAreaProps {
 export function ChatArea({
     channelName,
     chatId,
+    typingUserIds,
     participants,
     onToggleMembers,
     isMembersOpen,
@@ -49,18 +51,14 @@ export function ChatArea({
         currentUser,
     });
 
-    const {
-        usersIds: typingUsers,
-        startTyping,
-        stopTyping,
-    } = useTyping({
+    const { startTyping, stopTyping } = useTypingEmitter({
         chatId,
         socket,
     });
 
     const channelUsers = participants?.map((p) => p.user) ?? [];
     const formatedString = formatTyping(
-        typingUsers,
+        typingUserIds,
         channelUsers,
         currentUser?.id,
     );
