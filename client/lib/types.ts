@@ -20,3 +20,5 @@ export interface Message {
     createdAt: Date;
     sender: User;
 }
+
+export type TypingByChat = Record<string, string[]>;
