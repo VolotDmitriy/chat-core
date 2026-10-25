@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { SpinnerEmpty } from '@/components/ui/loading';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/context/auth-context';
-import type { Chat } from '@/lib/types';
+import type { Chat, TypingByChat, User } from '@/lib/types';
+import { getPreviewText } from '@/lib/typing';
 import { cn } from '@/lib/utils';
 import { ChevronDown, Hash, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
@@ -13,6 +14,7 @@ import { CreateChatDialog } from './create-chat-dialog';
 
 interface SidebarProps {
     chats: Chat[];
+    typingByChat: TypingByChat;
     loading: boolean;
     selectedChannel: string | null;
     onSelectChannel: (id: string) => void;
@@ -21,6 +23,7 @@ interface SidebarProps {
 
 export function Sidebar({
     chats,
+    typingByChat,
     loading,
     selectedChannel,
     onSelectChannel,
@@ -49,6 +52,24 @@ export function Sidebar({
         });
         return { groupChats, directChats };
     }
+
+    function getTypingUsers(chatId: string) {
+        const targetChat = chats.find((chat) => chat.id === chatId);
+        if (!targetChat) return [];
+        const typingUserIds = typingByChat[chatId] || [];
+        const typingUsers: User[] = [];
+
+        for (const typingUserId of typingUserIds) {
+            if (typingUserId === currentUser?.id) continue;
+
+            const participant = targetChat.participants.find(
+                (item) => item.user.id === typingUserId,
+            );
+            if (participant) typingUsers.push(participant.user);
+        }
+        return typingUsers;
+    }
+
     return (
         <aside className="bg-sidebar border-sidebar-border flex w-64 shrink-0 flex-col border-r">
             {/* Search */}
@@ -97,6 +118,7 @@ export function Sidebar({
                                     <ChannelItem
                                         key={chat.id}
                                         chat={chat}
+                                        typingUsers={getTypingUsers(chat.id)}
                                         isSelected={selectedChannel === chat.id}
                                         onSelect={() =>
                                             onSelectChannel(chat.id)
@@ -139,6 +161,7 @@ export function Sidebar({
                                     <DirectMessageItem
                                         key={chat.id}
                                         chat={chat}
+                                        typingUsers={getTypingUsers(chat.id)}
                                         isSelected={selectedChannel === chat.id}
                                         onSelect={() =>
                                             onSelectChannel(chat.id)
@@ -166,14 +189,16 @@ export function Sidebar({
 
 function ChannelItem({
     chat,
+    typingUsers,
     isSelected,
     onSelect,
 }: {
     chat: Chat;
+    typingUsers: User[];
     isSelected: boolean;
     onSelect: () => void;
 }) {
-    const lastMessage = chat.messages.at(-1);
+    const previewText = getPreviewText(typingUsers, chat.messages.at(-1));
 
     return (
         <button
@@ -190,9 +215,9 @@ function ChannelItem({
                 <span className="truncate text-sm">
                     {chat.name ?? 'Unnamed'}
                 </span>
-                {lastMessage && (
+                {previewText && (
                     <p className="text-muted-foreground truncate text-xs">
-                        {lastMessage.content}
+                        {previewText}
                     </p>
                 )}
             </div>
@@ -203,18 +228,20 @@ function ChannelItem({
 function DirectMessageItem({
     chat,
     isSelected,
+    typingUsers,
     onSelect,
     currentUserId,
 }: {
     chat: Chat;
     isSelected: boolean;
+    typingUsers: User[];
     onSelect: () => void;
     currentUserId: string | undefined;
 }) {
     const partner = chat.participants.find(
         (p) => p.user.id !== currentUserId,
     )?.user;
-    const lastMessage = chat.messages.at(-1);
+    const previewText = getPreviewText(typingUsers, chat.messages.at(-1));
     const initials = partner?.username.slice(0, 2).toUpperCase() ?? '??';
 
     return (
@@ -236,9 +263,9 @@ function DirectMessageItem({
                 <span className="truncate text-sm">
                     {partner?.username ?? 'Unknown'}
                 </span>
-                {lastMessage && (
+                {previewText && (
                     <p className="text-muted-foreground truncate text-xs">
-                        {lastMessage.content}
+                        {previewText}
                     </p>
                 )}
             </div>

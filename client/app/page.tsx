@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/chat/sidebar';
 import { Topbar } from '@/components/chat/topbar';
 import { useChats } from '@/hooks/use-chats';
 import { useSocket } from '@/hooks/use-socket';
+import { useTypingByChat } from '@/hooks/use-typing-by-chat';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
@@ -16,6 +17,7 @@ export default function Home() {
 
     const socket = useSocket();
     const { chats, loading, refetch } = useChats({ socket });
+    const { typingByChat } = useTypingByChat(socket);
     const currentChat = chats.find((chat) => chat.id === selectedChannel);
     const [isMembersOpen, setIsMembersOpen] = useState(true);
 
@@ -32,6 +34,7 @@ export default function Home() {
             <div className="flex flex-1 overflow-hidden">
                 <Sidebar
                     selectedChannel={selectedChannel}
+                    typingByChat={typingByChat}
                     onSelectChannel={handleSelectChannel}
                     chats={chats}
                     loading={loading}
