@@ -60,7 +60,7 @@ export function MembersPanel({
                 {/* Online Section */}
                 <div className="p-3">
                     <div className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
-                        Online — {onlineUserIds.size}
+                        Online — {participants.length - offlineUserIds.size}
                     </div>
                     <div className="space-y-1">
                         {participants.map((user) => {
@@ -80,7 +80,7 @@ export function MembersPanel({
                 {/* Offline Section */}
                 <div className="p-3 pt-0">
                     <div className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
-                        Offline — {participants.length - onlineUserIds.size}
+                        Offline — {offlineUserIds.size}
                     </div>
                     <div className="space-y-1">
                         {participants.map((user) => {
