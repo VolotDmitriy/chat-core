@@ -1,6 +1,7 @@
 'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AvatarImage } from '@/components/ui/avatar';
+import { UserAvatar } from '@/components/user-avatar';
 import { useAuth } from '@/context/auth-context';
 import { MessageSquare, Wifi } from 'lucide-react';
 
@@ -37,12 +38,13 @@ export function Topbar({ channelName }: TopbarProps) {
                     <Wifi className="h-4 w-4 text-emerald-500" />
                     <span className="text-emerald-500">Connected</span>
                 </div>
-                <Avatar className="h-8 w-8 ring-2 ring-[#3b82f6]/50">
+                <UserAvatar
+                    username={currentUser?.username}
+                    className="ring-2 ring-[#3b82f6]/50"
+                    fallbackClassName="bg-[#3b82f6] text-xs text-white"
+                >
                     <AvatarImage src={'/image'} alt={currentUser?.username} />
-                    <AvatarFallback className="bg-[#3b82f6] text-xs text-white">
-                        {currentUser?.username?.[0]?.toUpperCase()}
-                    </AvatarFallback>
-                </Avatar>
+                </UserAvatar>
             </div>
         </header>
     );

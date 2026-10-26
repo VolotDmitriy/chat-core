@@ -1,6 +1,5 @@
 'use client';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/context/auth-context';
@@ -13,6 +12,7 @@ import { Hash, Paperclip, Pin, Send, Smile, Users } from 'lucide-react';
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { Socket } from 'socket.io-client';
 import { useDebounce } from 'use-debounce';
+import { UserAvatar } from '@/components/user-avatar';
 import { EmojiPicker } from './emoji-picker';
 
 interface ChatAreaProps {
@@ -148,15 +148,17 @@ export function ChatArea({
                     {/* Typing Indicator */}
                     {formatedString && (
                         <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8">
+                            <UserAvatar username={undefined}>
                                 {/*<AvatarImage*/}
                                 {/*    src={users[0].avatar}*/}
                                 {/*    alt={users[0].name}*/}
                                 {/*/>*/}
-                                <AvatarFallback className="bg-muted text-xs">
-                                    SC
-                                </AvatarFallback>
-                            </Avatar>
+                            </UserAvatar>
+                            {/*<Avatar className="h-8 w-8">*/}
+                            {/*    <AvatarFallback className="bg-muted text-xs">*/}
+                            {/*        ?*/}
+                            {/*    </AvatarFallback>*/}
+                            {/*</Avatar>*/}
                             <div className="bg-card rounded-2xl rounded-bl-sm px-4 py-2">
                                 <div className="flex items-center gap-1">
                                     <span className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:-0.3s]" />
@@ -253,17 +255,7 @@ function MessageBubble({
                 isOwn && 'flex-row-reverse',
             )}
         >
-            {!isOwn && (
-                <Avatar className="h-8 w-8 shrink-0">
-                    {/*<AvatarImage src={message.sender.avatar} alt={username} />*/}
-                    <AvatarFallback className="bg-muted text-xs">
-                        {username
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')}
-                    </AvatarFallback>
-                </Avatar>
-            )}
+            {!isOwn && <UserAvatar username={username} />}
             <div
                 className={cn(
                     'flex max-w-[70%] flex-col',

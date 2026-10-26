@@ -1,6 +1,5 @@
 'use client';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SpinnerEmpty } from '@/components/ui/loading';
@@ -11,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { Check, Search, UserPlus, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
+import { UserAvatar } from '@/components/user-avatar';
 
 interface AddMemberDialogProps {
     isOpen: boolean;
@@ -175,11 +175,7 @@ export function AddMemberDialog({
                                                   : 'hover:bg-muted/50',
                                         )}
                                     >
-                                        <Avatar className="h-8 w-8 shrink-0">
-                                            <AvatarFallback className="bg-muted text-xs">
-                                                {user.username[0].toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
+                                        <UserAvatar username={user.username} />
                                         <div className="min-w-0 flex-1">
                                             <div className="truncate text-sm font-medium">
                                                 {user.username}

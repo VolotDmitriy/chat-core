@@ -1,9 +1,9 @@
 'use client';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SpinnerEmpty } from '@/components/ui/loading';
+import { UserAvatar } from '@/components/user-avatar';
 import { createChat, searchUsers } from '@/lib/chat';
 import { errorHandler } from '@/lib/error-handler';
 import { Chat, User } from '@/lib/types';
@@ -235,11 +235,7 @@ export function CreateChatDialog({
                                                   : 'hover:bg-muted/50',
                                         )}
                                     >
-                                        <Avatar className="h-8 w-8 shrink-0">
-                                            <AvatarFallback className="bg-muted text-xs">
-                                                {user.username[0].toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
+                                        <UserAvatar username={user.username} />
                                         <div className="min-w-0 flex-1">
                                             <div className="truncate text-sm font-medium">
                                                 {user.username}

@@ -1,8 +1,8 @@
 'use client';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { UserAvatar } from '@/components/user-avatar';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import { User } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -113,15 +113,9 @@ function MemberItem({ user, isOnline }: { user: User; isOnline: boolean }) {
     return (
         <div className="hover:bg-sidebar-accent flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 transition-colors">
             <div className="relative shrink-0">
-                <Avatar className={cn('h-8 w-8', !isOnline && 'opacity-50')}>
+                <UserAvatar username={user.username} isOnline={isOnline}>
                     {/*<AvatarImage src={user.avatar} alt={user.username} />*/}
-                    <AvatarFallback className="bg-muted text-xs">
-                        {user.username
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')}
-                    </AvatarFallback>
-                </Avatar>
+                </UserAvatar>
                 <span
                     className={cn(
                         'border-sidebar absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border-2',

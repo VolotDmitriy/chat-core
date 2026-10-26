@@ -1,9 +1,9 @@
 'use client';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { SpinnerEmpty } from '@/components/ui/loading';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { UserAvatar } from '@/components/user-avatar';
 import { useAuth } from '@/context/auth-context';
 import type { Chat, TypingByChat, User } from '@/lib/types';
 import { getPreviewText } from '@/lib/typing';
@@ -242,7 +242,6 @@ function DirectMessageItem({
         (p) => p.user.id !== currentUserId,
     )?.user;
     const previewText = getPreviewText(typingUsers, chat.messages.at(-1));
-    const initials = partner?.username.slice(0, 2).toUpperCase() ?? '??';
 
     return (
         <button
@@ -254,11 +253,10 @@ function DirectMessageItem({
                     : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
             )}
         >
-            <Avatar className="h-6 w-6 shrink-0">
-                <AvatarFallback className="bg-muted text-[10px]">
-                    {initials}
-                </AvatarFallback>
-            </Avatar>
+            <UserAvatar
+                username={partner?.username}
+                fallbackClassName={isSelected ? 'bg-background' : undefined}
+            />
             <div className="min-w-0 flex-1">
                 <span className="truncate text-sm">
                     {partner?.username ?? 'Unknown'}
