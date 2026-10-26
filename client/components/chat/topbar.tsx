@@ -1,6 +1,5 @@
 'use client';
 
-import { AvatarImage } from '@/components/ui/avatar';
 import { UserAvatar } from '@/components/user-avatar';
 import { useAuth } from '@/context/auth-context';
 import { MessageSquare, Wifi } from 'lucide-react';
@@ -20,7 +19,7 @@ export function Topbar({ channelName }: TopbarProps) {
                     <MessageSquare className="h-5 w-5 text-white" />
                 </div>
                 <span className="text-foreground text-lg font-semibold">
-                    ChatFlow
+                    ChatCore
                 </span>
             </div>
 
@@ -43,7 +42,7 @@ export function Topbar({ channelName }: TopbarProps) {
                     className="ring-2 ring-[#3b82f6]/50"
                     fallbackClassName="bg-[#3b82f6] text-xs text-white"
                 >
-                    <AvatarImage src={'/image'} alt={currentUser?.username} />
+                    {/*<AvatarImage src={'/image'} alt={currentUser?.username} />*/}
                 </UserAvatar>
             </div>
         </header>
