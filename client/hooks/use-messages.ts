@@ -51,7 +51,7 @@ export function useMessages({
             id: crypto.randomUUID(),
             chatId: chatId,
             content,
-            createdAt: new Date(),
+            createdAt: new Date().toISOString(),
             sender: currentUser,
         };
 
