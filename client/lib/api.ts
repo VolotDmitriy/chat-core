@@ -26,14 +26,24 @@ function clearAuthAndRedirect() {
     window.location.href = '/login';
 }
 
+function isAuthRequest(error: AxiosError) {
+    const url = error.config?.url;
+    if (!url) return false;
+    return url.startsWith('/auth/');
+}
+
 let refreshPromise: Promise<string> | null = null;
 
 api.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
         if (error.response && error.response.status === 401) {
+            if (isAuthRequest(error)) return Promise.reject(error);
             const refToken = getRefreshToken();
-            if (!refToken) return clearAuthAndRedirect();
+            if (!refToken) {
+                clearAuthAndRedirect();
+                return Promise.reject(error);
+            }
 
             try {
                 if (!refreshPromise) {

@@ -1,5 +1,10 @@
 import api from '@/lib/api';
-import { clearSession, saveSession, SessionData } from '@/lib/session';
+import {
+    clearSession,
+    getRefreshToken,
+    saveSession,
+    SessionData,
+} from '@/lib/session';
 import { User } from '@/lib/types';
 
 export async function login(email: string, password: string): Promise<User> {
@@ -26,5 +31,11 @@ export async function register(
 }
 
 export async function logout(): Promise<void> {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+        await api
+            .post('/auth/logout', { refreshToken })
+            .catch(() => undefined);
+    }
     clearSession();
 }
