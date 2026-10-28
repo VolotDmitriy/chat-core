@@ -1,5 +1,6 @@
 'use client';
 
+import { getStoredUser } from '@/lib/session';
 import { User } from '@/lib/types';
 import {
     createContext,
@@ -24,14 +25,10 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     useEffect(() => {
-        const user = localStorage.getItem('user');
+        const user = getStoredUser();
         if (!user) return;
-        try {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setCurrentUser(JSON.parse(user));
-        } catch {
-            localStorage.removeItem('user');
-        }
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setCurrentUser(user);
     }, []);
 
     return (

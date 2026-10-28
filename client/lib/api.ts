@@ -1,3 +1,9 @@
+import {
+    clearSession,
+    getAccessToken,
+    getRefreshToken,
+    setAccessToken,
+} from '@/lib/session';
 import axios, { AxiosError } from 'axios';
 
 const api = axios.create({
@@ -8,10 +14,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-    const token =
-        typeof window !== 'undefined'
-            ? localStorage.getItem('accessToken')
-            : null;
+    const token = getAccessToken();
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -19,9 +22,7 @@ api.interceptors.request.use((config) => {
 });
 
 function clearAuthAndRedirect() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+    clearSession();
     window.location.href = '/login';
 }
 
@@ -31,7 +32,7 @@ api.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
         if (error.response && error.response.status === 401) {
-            const refToken = localStorage.getItem('refreshToken');
+            const refToken = getRefreshToken();
             if (!refToken) return clearAuthAndRedirect();
 
             try {
@@ -44,8 +45,7 @@ api.interceptors.response.use(
 
                 const newAccToken = await refreshPromise;
 
-                localStorage.setItem('accessToken', newAccToken);
-                document.cookie = `accessToken=${newAccToken}`;
+                setAccessToken(newAccToken);
                 error.config!.headers.Authorization = `Bearer ${newAccToken}`;
 
                 return api(error.config!);
