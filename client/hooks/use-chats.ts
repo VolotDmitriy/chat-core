@@ -1,7 +1,7 @@
 import api from '@/lib/api';
 import { errorHandler } from '@/lib/error-handler';
 import type { Chat, Message } from '@/lib/types';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Socket } from 'socket.io-client';
 
 interface useChatParams {
@@ -11,6 +11,7 @@ interface useChatParams {
 export function useChats({ socket }: useChatParams) {
     const [chats, setChats] = useState<Chat[]>([]);
     const [loading, setLoading] = useState(true);
+    const hasConnectedRef = useRef(false);
 
     const fetchChats = () => {
         setLoading(true);
@@ -44,8 +45,19 @@ export function useChats({ socket }: useChatParams) {
     useEffect(() => {
         if (!socket) return;
         socket.on('chat:added', fetchChats);
+
+        hasConnectedRef.current = socket.connected;
+        const reconnection = () => {
+            if (!hasConnectedRef.current) {
+                hasConnectedRef.current = true;
+                return;
+            } else fetchChats();
+        };
+        socket.on('connect', reconnection);
+
         return () => {
             socket.off('chat:added', fetchChats);
+            socket.off('connect', reconnection);
         };
     }, [socket]);
 
